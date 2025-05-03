@@ -7,7 +7,7 @@ from bson.objectid import ObjectId
 from datetime import datetime
 
 app = Flask(__name__)
-app.config["MONGO_URI"] = "mongodb://localhost:27017/smartcart_db"
+app.config["MONGO_URI"] = "mongodb://mongo:27017/smartcart_db"
 mongo = PyMongo(app)
 
 # ---------- ΑΡΧΙΚΟΠΟΙΗΣΗ ΠΡΟΪΟΝΤΩΝ ----------
@@ -21,7 +21,7 @@ def init_products():
     ]
     mongo.db.products.delete_many({})
     mongo.db.products.insert_many(products)   
-    return jsonify({"message": "Προϊόντα αρχικοποιήθηκαν"}), 201
+    return jsonify({"message": "Τα προϊόντα αρχικοποιήθηκαν"}), 201
 
 # ---------- ΛΙΣΤΑ / ΑΝΑΖΗΤΗΣΗ ΠΡΟΪΟΝΤΩΝ ----------
 @app.route('/products', methods=['GET'])
