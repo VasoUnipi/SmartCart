@@ -12,16 +12,16 @@ mongo = PyMongo(app)
 
 # ---------- ΑΡΧΙΚΟΠΟΙΗΣΗ ΠΡΟΪΟΝΤΩΝ ----------
 @app.route('/init/products', methods=['POST'])
-#def init_products():
-    #products = [
-        #{"name": "Γάλα", "category": "Τρόφιμα", "description": "Γάλα 1lt", "image_url": "", "price": 1.5},
-        #{"name": "Ψωμί", "category": "Τρόφιμα", "description": "Ψωμί ολικής", "image_url": "", "price": 0.9},
-        #{"name": "Οδοντόκρεμα", "category": "Υγιεινή", "description": "Οδοντόκρεμα 75ml", "image_url": "", "price": 2.3},
-        #{"name": "Αφρόλουτρο", "category": "Υγιεινή", "description": "500ml", "image_url": "", "price": 3.8}
-    #]
-    #mongo.db.products.delete_many({})
-    #mongo.db.products.insert_many(products)   
-    #return jsonify({"message": "Προϊόντα αρχικοποιήθηκαν"}), 201
+def init_products():
+    products = [
+        {"name": "Γάλα", "category": "Τρόφιμα", "description": "Γάλα 1lt", "image_url": "", "price": 1.5},
+        {"name": "Ψωμί", "category": "Τρόφιμα", "description": "Ψωμί ολικής", "image_url": "", "price": 0.9},
+        {"name": "Οδοντόκρεμα", "category": "Υγιεινή", "description": "Οδοντόκρεμα 75ml", "image_url": "", "price": 2.3},
+        {"name": "Αφρόλουτρο", "category": "Υγιεινή", "description": "500ml", "image_url": "", "price": 3.8}
+    ]
+    mongo.db.products.delete_many({})
+    mongo.db.products.insert_many(products)   
+    return jsonify({"message": "Προϊόντα αρχικοποιήθηκαν"}), 201
 
 # ---------- ΛΙΣΤΑ / ΑΝΑΖΗΤΗΣΗ ΠΡΟΪΟΝΤΩΝ ----------
 @app.route('/products', methods=['GET'])

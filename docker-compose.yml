@@ -2,7 +2,7 @@ services:
   backend:
     build:
       context: ./SmartCart
-      #dockerfile: ../Dockerfile  # 👈 tell Docker to look for Dockerfile one level up
+      dockerfile: ../Dockerfile  # 👈 tell Docker to look for Dockerfile one level up
     container_name: smartcart_backend
     ports:
       - "5000:5000"
