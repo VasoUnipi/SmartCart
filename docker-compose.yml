@@ -1,0 +1,24 @@
+services:
+  backend:
+    build:
+      context: ./SmartCart
+      #dockerfile: ../Dockerfile  # 👈 tell Docker to look for Dockerfile one level up
+    container_name: smartcart_backend
+    ports:
+      - "5000:5000"
+    environment:
+      - MONGO_URI=mongodb://mongo:27017/smartcart_db
+    depends_on:
+      - mongo
+
+  mongo:
+    image: mongo:6
+    container_name: smartcart_mongo
+    restart: always
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo_data:/data/db
+
+volumes:
+  mongo_data:
