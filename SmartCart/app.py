@@ -10,6 +10,12 @@ app = Flask(__name__)
 app.config["MONGO_URI"] = "mongodb://mongo:27017/smartcart_db"
 mongo = PyMongo(app)
 
+#------HOMEPAGE------
+# Route: Home page
+@app.route('/')
+def home():
+    return "🚀 Το SmartCart app τρέχει σωστά!"
+
 # ---------- ΑΡΧΙΚΟΠΟΙΗΣΗ ΠΡΟΪΟΝΤΩΝ ----------
 @app.route('/init/products', methods=['POST'])
 def init_products():
