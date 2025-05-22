@@ -1,6 +1,3 @@
-#if __name__ == "__main__":
- #   app.run(host="0.0.0.0", port=5000)
-
 from flask import Flask, request, jsonify
 from flask_pymongo import PyMongo
 from bson.objectid import ObjectId
@@ -69,7 +66,7 @@ def add_to_cart(cart_id):
         {"_id": ObjectId(cart_id)},
         {"$push": {"items": {"product_id": ObjectId(product_id), "quantity": quantity}}}
     )
-    return jsonify({"message": "Το προϊόν προστέθηκε στο καλάθι"}), 200
+    return jsonify({"message": "✅ Το προϊόν προστέθηκε στο καλάθι!"}), 200
 
 # ---------- ΟΛΟΚΛΗΡΩΣΗ ΑΓΟΡΑΣ ----------
 @app.route('/cart/<cart_id>/checkout', methods=['POST'])
@@ -85,7 +82,7 @@ def checkout(cart_id):
         {"_id": ObjectId(cart_id)},
         {"$set": {"checked_out": True, "timestamp": datetime.now()}}
     )
-    return jsonify({"message": "Η αγορά ολοκληρώθηκε"}), 200
+    return jsonify({"message": "🛒 Η αγορά ολοκληρώθηκε!"}), 200
 
 # ---------- ΙΣΤΟΡΙΚΟ ΑΓΟΡΩΝ ----------
 @app.route('/purchases', methods=['GET'])
@@ -99,8 +96,6 @@ def purchase_history():
     return jsonify(carts), 200
 
 # ---------- ΕΝΑΡΞΗ SERVER ----------
-#if __name__ == '__main__':
- #   app.run(debug=True)
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000, debug=True)
