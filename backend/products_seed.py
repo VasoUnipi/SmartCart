@@ -1,4 +1,10 @@
-[{
+# products_seed.py
+import requests
+
+API = "http://localhost:5000/products"
+
+products = [
+{
   "id": "680fc403a5eca3c64edaa26f",
   "name": "Γάλα Πλήρες 1lt",
   "category": "Γαλακτοκομικά & Αυγά",
@@ -294,3 +300,11 @@
   "description": "Ξηρό λευκό κρασί από ελληνικούς αμπελώνες.",
   "image_url": "https://plus.unsplash.com/premium_photo-1676590905367-12ff693f0afe?w=500&auto=format&fit=crop&q=60&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8NXx8d2hpdGUlMjB3aW5lfGVufDB8fDB8fHww"
 }]
+
+
+for product in products:
+    res = requests.post(API, json=product)
+    print(f"{product['name']} -> {res.status_code}")
+
+
+print("✅ Seeded products successfully!")
