@@ -1,12 +1,19 @@
 from flask import Flask, request, jsonify
 from flask_pymongo import PyMongo
 from bson.objectid import ObjectId
+from datetime import datetime
 #from flask_cors import CORS
 
 app = Flask(__name__)
 
 app.config['MONGO_URI'] = 'mongodb://mongo:27017/smartcart'
 mongo = PyMongo(app)
+
+#------HOMEPAGE------
+# Route: Home page
+@app.route('/')
+def home():
+    return "🚀 Το SmartCart app τρέχει σωστά!"
 
 @app.route('/products', methods=['GET'])
 def get_products():
@@ -62,9 +69,19 @@ def get_cart():
 @app.route('/cart/<user_id>', methods=['GET'])
 def view_cart(user_id):
     cart_items = list(mongo.db.carts.find({"user_id": user_id}))
+    enriched_items = []
     for item in cart_items:
-        item['_id'] = str(item['_id'])
-    return jsonify(cart_items)
+        product = mongo.db.products.find_one({"_id": ObjectId(item["product_id"])})
+        if product:
+            enriched_items.append({
+                "_id": str(item["_id"]),
+                "product_id": str(item["product_id"]),
+                "quantity": item["quantity"],
+                "product_name": product["name"],
+                "price": product["price"]
+            })
+    return jsonify(enriched_items)
+
 
 @app.route('/cart/<item_id>', methods=['PUT'])
 def update_quantity(item_id):
@@ -82,8 +99,27 @@ def checkout(user_id):
     cart_items = list(mongo.db.carts.find({"user_id": user_id}))
     if not cart_items:
         return jsonify({"message": "Cart is empty"}), 400
+
+    mongo.db.purchases.insert_one({
+        "user_id": user_id,
+        "items": cart_items,
+        "timestamp": datetime.now()
+    })
+
     mongo.db.carts.delete_many({"user_id": user_id})
-    return jsonify({"message": "Purchase complete"})
+    return jsonify({"message": "Purchase complete"}), 200
+
+@app.route('/purchases/<user_id>', methods=['GET'])
+def get_purchases(user_id):
+    history = list(mongo.db.purchases.find({"user_id": user_id}))
+    for h in history:
+        h['_id'] = str(h['_id'])
+        h['timestamp'] = h['timestamp'].isoformat()
+        for item in h['items']:
+            item['_id'] = str(item['_id'])
+            item['product_id'] = str(item['product_id']) if 'product_id' in item else ''
+    return jsonify(history), 200
+
 
 if __name__ == '__main__':
     app.run(debug=True, host='0.0.0.0')
