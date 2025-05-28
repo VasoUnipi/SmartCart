@@ -3,13 +3,33 @@ import requests
 
 API_BASE = "http://backend:5000"
 
-st.set_page_config(page_title="SmartCart", page_icon="🛒")
-# ----------- ΕΝΑΡΞΗ ΤΟΥ SESSION STATE -------------
+st.set_page_config(page_title="SmartCart", page_icon="🛒", layout="wide")
+
+# ------------------ SESSION STATE ------------------
 if 'user_id' not in st.session_state:
     st.session_state.user_id = ''
+if 'category_filter' not in st.session_state:
+    st.session_state.category_filter = ""
+if 'search_term' not in st.session_state:
+    st.session_state.search_term = ""
+if 'show_results' not in st.session_state:
+    st.session_state.show_results = False
+if 'results' not in st.session_state:
+    st.session_state.results = []
+
 st.title("🛒 SmartCart")
 
-# ----------- ΣΥΝΑΡΤΗΣΕΙΣ BACKEND -------------
+# ------------------ BACKEND ΣΥΝΑΡΤΗΣΕΙΣ ------------------
+def get_categories():
+    try:
+        r = requests.get(f"{API_BASE}/products")
+        if r.status_code == 200:
+            products = r.json()
+            categories = sorted(list(set([p['category'] for p in products if 'category' in p])))
+            return ["Όλες"] + categories
+    except:
+        return ["Όλες"]
+
 def search_products(name=None, category=None, price=None):
     params = {}
     if name:
@@ -23,16 +43,6 @@ def search_products(name=None, category=None, price=None):
         return r.json() if r.status_code == 200 else []
     except:
         return []
-
-def get_categories():
-    try:
-        r = requests.get(f"{API_BASE}/products")
-        if r.status_code == 200:
-            products = r.json()
-            categories = sorted(list(set([p['category'] for p in products if 'category' in p])))
-            return ["Όλες"] + categories
-    except:
-        return ["Όλες"]
 
 def get_cart(user_id):
     r = requests.get(f"{API_BASE}/cart/{user_id}")
@@ -55,56 +65,78 @@ def checkout(user_id):
     r = requests.post(f"{API_BASE}/cart/checkout/{user_id}")
     return r.status_code == 200
 
-# ----------- USER ID INPUT -------------
+# ------------------ USER ID ------------------
 st.sidebar.subheader("🧑 Είσοδος Χρήστη")
 user_input = st.sidebar.text_input("Δώσε το User ID σου:", value=st.session_state.get('user_id', ''))
-
 if user_input:
     st.session_state.user_id = user_input
 
-# ----------- ΦΟΡΜΑ ΑΝΑΖΗΤΗΣΗΣ -------------
-# ----------- ΦΟΡΜΑ ΑΝΑΖΗΤΗΣΗΣ -------------
-st.subheader("🔍 Αναζήτηση Προϊόντων")
-name = st.text_input("Όνομα προϊόντος")
-category_list = get_categories()
-category = st.selectbox("Κατηγορία", category_list)
-price = st.number_input("Μέγιστη τιμή", min_value=0.0, value=0.0, step=0.5)
-sort_option = st.selectbox("Ταξινόμηση κατά", ["Χωρίς ταξινόμηση", "Τιμή (Αύξουσα)", "Τιμή (Φθίνουσα)", "Όνομα (Α-Ω)", "Όνομα (Ω-Α)"])
+# ------------------ ΚΟΡΔΕΛΑ ------------------
+st.markdown("""
+    <style>
+    .block-container {
+        padding-top: 2rem;
+    }
+    .product-card {
+        border: 1px solid #ddd;
+        border-radius: 10px;
+        padding: 1rem;
+        background-color: #f9f9f9;
+        box-shadow: 2px 2px 10px rgba(0,0,0,0.05);
+    }
+    </style>
+""", unsafe_allow_html=True)
 
-if st.button("Αναζήτηση"):
-    results = search_products(name, category, price if price > 0 else None)
-    if sort_option == "Τιμή (Αύξουσα)":
-        results.sort(key=lambda x: x.get('price', 0))
-    elif sort_option == "Τιμή (Φθίνουσα)":
-        results.sort(key=lambda x: x.get('price', 0), reverse=True)
-    elif sort_option == "Όνομα (Α-Ω)":
-        results.sort(key=lambda x: x.get('name', '').lower())
-    elif sort_option == "Όνομα (Ω-Α)":
-        results.sort(key=lambda x: x.get('name', '').lower(), reverse=True)
-    st.session_state['results'] = results
+col1, col2, col3, col4 = st.columns([2, 3, 2, 1])
+with col1:
+    st.markdown("<h3 style='color:#2c3e50;'>🛒 SmartCart</h3>", unsafe_allow_html=True)
+with col2:
+    st.session_state.search_term = st.text_input("Αναζήτηση προϊόντος", value=st.session_state.search_term)
+with col3:
+    st.session_state.category_filter = st.selectbox("Κατηγορία", get_categories())
+with col4:
+    if st.button("🔍 Αναζήτηση"):
+        results = search_products(
+            name=st.session_state.search_term,
+            category=st.session_state.category_filter
+        )
+        st.session_state.results = results
+        st.session_state.show_results = True
 
-# ----------- ΑΠΟΤΕΛΕΣΜΑΤΑ ΑΝΑΖΗΤΗΣΗΣ -------------
-if 'results' in st.session_state:
-    st.subheader("📦 Αποτελέσματα")
-    for product in st.session_state.results:
-        st.markdown(f"**{product['name']}** | {product['category']} | {product['price']}€")
-        st.image(product['image_url'] if product.get('image_url') else "https://via.placeholder.com/200", width=200)
-        st.markdown(product['description'])
-        col1, col2 = st.columns([3, 1])
-        qty = col1.number_input("Ποσότητα", min_value=1, max_value=10, key=f"qty_{product['_id']}")
-        if col2.button("Προσθήκη", key=f"add_{product['_id']}"):
-            added = add_to_cart(st.session_state.user_id, {"product_id": product['_id'], "quantity": qty})
-            if added:
-                st.success("Προστέθηκε στο καλάθι")
-            else:
-                st.error("Αποτυχία προσθήκης")
+# ------------------ ΑΡΧΙΚΗ ΣΕΛΙΔΑ ------------------
+if not st.session_state.show_results:
+    st.markdown("### Καλωσήρθατε στο **SmartCart** 🛍️")
+    st.markdown("Αναζητήστε προϊόντα, προσθέστε τα στο καλάθι και αξιοποιήστε την τεχνητή νοημοσύνη για συμβουλές και συνταγές.")
 
-# ----------- ΚΑΛΑΘΙ -------------
+# ------------------ ΑΠΟΤΕΛΕΣΜΑΤΑ ------------------
+if st.session_state.show_results:
+    products = st.session_state.results
+    if products:
+        st.markdown("### 📦 Αποτελέσματα")
+        cols = st.columns(3)
+        for i, product in enumerate(products):
+            with cols[i % 3]:
+                st.image(product['image_url'] if product.get('image_url') else "https://via.placeholder.com/200", width=200)
+                st.markdown(f"**{product['name']}** | {product['category']} | {product['price']}€")
+                st.markdown(product['description'])
+                colx, coly = st.columns([3, 1])
+                qty = colx.number_input("Ποσότητα", min_value=1, max_value=10, key=f"qty_{product['_id']}")
+                if coly.button("🛒", key=f"add_{product['_id']}"):
+                    added = add_to_cart(st.session_state.user_id, {"product_id": product['_id'], "quantity": qty})
+                    if added:
+                        st.success("Προστέθηκε στο καλάθι")
+                    else:
+                        st.error("Αποτυχία προσθήκης")
+    else:
+        st.info("Δεν βρέθηκαν προϊόντα.")
+
+# ------------------ ΚΑΛΑΘΙ ------------------
+st.markdown("---")
 st.subheader("🧺 Το Καλάθι Μου")
 st.markdown(f"**User ID:** `{st.session_state.user_id}`")
 cart_items = get_cart(st.session_state.user_id)
-
 total = 0
+
 for item in cart_items:
     st.markdown(f"**{item['product_id']}** - Ποσότητα: {item['quantity']}")
     col1, col2, col3 = st.columns(3)
@@ -126,5 +158,54 @@ if st.button("✅ Ολοκλήρωση Αγοράς"):
     if checkout(st.session_state.user_id):
         st.success("Η αγορά ολοκληρώθηκε!")
         st.session_state.results = []
+        st.session_state.show_results = False
     else:
         st.error("Το καλάθι είναι άδειο ή απέτυχε η πληρωμή.")
+
+# ------------------ ΚΑΛΑΘΙ ------------------
+
+
+# ------------------ AI ΒΟΗΘΟΣ ------------------
+with st.sidebar.expander("🤖 AI Βοηθός", expanded=False):
+    ai_option = st.selectbox("Λειτουργία", [
+        "Πρόταση συνταγής",
+        "Αξιολόγηση διατροφής",
+        "Υγιεινές εναλλακτικές",
+        "Εβδομαδιαίο πλάνο",
+        "Λίστα για στόχο",
+        "Περιβαλλοντική ανάλυση",
+        "Συνδυαστικά προϊόντα"], key="ai_option")
+
+    ai_input = st.text_input("Προϊόντα (με κόμμα)", key="ai_input")
+    extra_input = ""
+    if ai_option == "Λίστα για στόχο":
+        extra_input = st.text_input("Στόχος (π.χ. vegan, διαβήτης)", key="ai_goal")
+
+    if st.button("▶ AI Εκτέλεση"):
+        endpoint_map = {
+            "Πρόταση συνταγής": "/ai/recipe",
+            "Αξιολόγηση διατροφής": "/ai/evaluate",
+            "Υγιεινές εναλλακτικές": "/ai/alternatives",
+            "Εβδομαδιαίο πλάνο": "/ai/mealplan",
+            "Λίστα για στόχο": "/ai/goal",
+            "Περιβαλλοντική ανάλυση": "/ai/eco",
+            "Συνδυαστικά προϊόντα": "/ai/combos"
+        }
+        route = endpoint_map.get(ai_option)
+        data = {"products": [x.strip() for x in ai_input.split(",")]} if ai_option != "Λίστα για στόχο" else {"goal": extra_input}
+        r = requests.post(f"{API_BASE}{route}", json=data)
+        if r.status_code == 200:
+            st.success(r.json())
+        else:
+            st.error("Αποτυχία απόκρισης από AI.")
+
+# ------------------ SCRAPING ------------------
+with st.expander("🌐 Τιμή από άλλες πηγές (scraping)", expanded=False):
+    scrap_term = st.text_input("Προϊόν για τιμή από τρίτο site", key="scraping")
+    if st.button("🔎 Έλεγχος τιμής από άλλο κατάστημα"):
+        r = requests.get(f"{API_BASE}/scraping/search/{scrap_term}")
+        if r.status_code == 200:
+            result = r.json()
+            st.write(result)
+        else:
+            st.warning("Σφάλμα κατά το scraping.")
