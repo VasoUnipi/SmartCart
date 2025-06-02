@@ -1,5 +1,7 @@
 import streamlit as st
 import requests
+from PIL import Image
+import os
 
 API_BASE = "http://backend:5000"
 
@@ -17,7 +19,12 @@ if 'show_results' not in st.session_state:
 if 'results' not in st.session_state:
     st.session_state.results = []
 
-st.title("🛒 SmartCart")
+image_path = os.path.join(os.path.dirname(__file__), "logos", "SmartCart.png")
+img = Image.open("SmartCart.png")
+small_img = img.resize((100, 100))  # width x height σε pixels
+st.image(small_img)
+
+#st.title("🛒 SmartCart")
 
 # ------------------ BACKEND ΣΥΝΑΡΤΗΣΕΙΣ ------------------
 def get_categories():
@@ -161,10 +168,6 @@ if st.button("✅ Ολοκλήρωση Αγοράς"):
         st.session_state.show_results = False
     else:
         st.error("Το καλάθι είναι άδειο ή απέτυχε η πληρωμή.")
-
-# ------------------ ΚΑΛΑΘΙ ------------------
-
-
 # ------------------ AI ΒΟΗΘΟΣ ------------------
 with st.sidebar.expander("🤖 AI Βοηθός", expanded=False):
     ai_option = st.selectbox("Λειτουργία", [
@@ -193,9 +196,9 @@ with st.sidebar.expander("🤖 AI Βοηθός", expanded=False):
         }
         route = endpoint_map.get(ai_option)
         data = {"products": [x.strip() for x in ai_input.split(",")]} if ai_option != "Λίστα για στόχο" else {"goal": extra_input}
-        r = requests.post(f"{API_BASE}{route}", json=data)
+        r = requests.post("http://ai:5001" + route, json=data)
         if r.status_code == 200:
-            st.success(r.json())
+            st.success(r.json()["response"])
         else:
             st.error("Αποτυχία απόκρισης από AI.")
 

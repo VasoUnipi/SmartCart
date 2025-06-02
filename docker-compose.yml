@@ -26,6 +26,27 @@ services:
     depends_on:
       - backend
 
+  analysis:
+    build:
+      context: .
+      dockerfile: analysis.Dockerfile
+    container_name: smartcart-analysis
+    ports:
+      - "5002:5002"
+    depends_on:
+      - backend
+  ai:
+    build:
+      context: .
+      dockerfile: ai.Dockerfile
+    container_name: smartcart-ai
+    ports:
+      - "5001:5001"
+    environment:
+      - GROQ_API_KEY=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
+    depends_on:
+      - backend
+
 volumes:
   mongo_data:
 
