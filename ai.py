@@ -1,10 +1,18 @@
 from flask import Flask, request, jsonify
 import requests
 import os
+from dotenv import load_dotenv
+
+# Φόρτωσε τοπικά τις μεταβλητές περιβάλλοντος
+load_dotenv()
 
 app = Flask(__name__)
 
-GROQ_API_KEY = os.getenv("GROQ_API_KEY", "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")
+# Πάρε το API key από το περιβάλλον χωρίς default τιμή
+GROQ_API_KEY = os.getenv("GROQ_API_KEY")
+if not GROQ_API_KEY:
+    raise ValueError("GROQ_API_KEY is not set in environment variables")
+
 GROQ_API_URL = "https://api.groq.com/openai/v1/chat/completions"
 GROQ_MODEL = "mixtral-8x7b-32768"
 

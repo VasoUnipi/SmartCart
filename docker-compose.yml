@@ -18,6 +18,8 @@ services:
       - mongo
     environment:
       - MONGO_URI=mongodb://mongo:27017/smartcart
+    env_file:
+      - .env
 
   frontend:
     build: ./frontend
@@ -25,6 +27,8 @@ services:
       - "8501:8501"
     depends_on:
       - backend
+    env_file:
+      - .env
 
   analysis:
     build:
@@ -42,10 +46,11 @@ services:
     container_name: smartcart-ai
     ports:
       - "5001:5001"
-    environment:
-      - GROQ_API_KEY=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
     depends_on:
       - backend
+    env_file:
+      - .env
+
 
 volumes:
   mongo_data:

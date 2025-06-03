@@ -19,8 +19,9 @@ if 'show_results' not in st.session_state:
 if 'results' not in st.session_state:
     st.session_state.results = []
 
+
 image_path = os.path.join(os.path.dirname(__file__), "logos", "SmartCart.png")
-img = Image.open("SmartCart.png")
+img = Image.open(image_path)
 small_img = img.resize((100, 100))  # width x height σε pixels
 st.image(small_img)
 
@@ -196,7 +197,8 @@ with st.sidebar.expander("🤖 AI Βοηθός", expanded=False):
         }
         route = endpoint_map.get(ai_option)
         data = {"products": [x.strip() for x in ai_input.split(",")]} if ai_option != "Λίστα για στόχο" else {"goal": extra_input}
-        r = requests.post("http://ai:5001" + route, json=data)
+        AI_BASE = os.getenv("AI_BASE", "http://localhost:5001")
+        requests.post(f"{AI_BASE}/ai/recipe", json=data)
         if r.status_code == 200:
             st.success(r.json()["response"])
         else:
