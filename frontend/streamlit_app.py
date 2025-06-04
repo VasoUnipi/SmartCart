@@ -2,7 +2,9 @@ import streamlit as st
 import requests
 from PIL import Image
 import os
-
+from dotenv import load_dotenv
+load_dotenv()
+AI_BASE = os.getenv("AI_BASE", "http://ai:5001")
 API_BASE = "http://backend:5000"
 
 st.set_page_config(page_title="SmartCart", page_icon="🛒", layout="wide")
@@ -22,7 +24,7 @@ if 'results' not in st.session_state:
 
 image_path = os.path.join(os.path.dirname(__file__), "logos", "SmartCart.png")
 img = Image.open(image_path)
-small_img = img.resize((100, 100))  # width x height σε pixels
+small_img = img.resize((200, 200))  # width x height σε pixels
 st.image(small_img)
 
 #st.title("🛒 SmartCart")
@@ -197,8 +199,9 @@ with st.sidebar.expander("🤖 AI Βοηθός", expanded=False):
         }
         route = endpoint_map.get(ai_option)
         data = {"products": [x.strip() for x in ai_input.split(",")]} if ai_option != "Λίστα για στόχο" else {"goal": extra_input}
-        AI_BASE = os.getenv("AI_BASE", "http://localhost:5001")
-        requests.post(f"{AI_BASE}/ai/recipe", json=data)
+        r = requests.post(f"{AI_BASE}{route}", json=data)
+
+        r = requests.post(f"{AI_BASE}{route}", json=data)
         if r.status_code == 200:
             st.success(r.json()["response"])
         else:

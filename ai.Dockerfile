@@ -4,7 +4,7 @@ WORKDIR /app
 
 COPY ai.py ./
 
-RUN pip install --no-cache-dir flask requests
+RUN pip install --no-cache-dir flask requests python-dotenv
 
 EXPOSE 5001
 
