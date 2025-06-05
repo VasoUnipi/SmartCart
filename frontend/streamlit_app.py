@@ -22,10 +22,11 @@ if 'results' not in st.session_state:
     st.session_state.results = []
 
 
-image_path = os.path.join(os.path.dirname(__file__), "logos", "SmartCart.png")
-img = Image.open(image_path)
-small_img = img.resize((200, 200))  # width x height σε pixels
-st.image(small_img)
+image_path = os.path.join(os.path.dirname(__file__), "logos", "2.png")
+img = Image.open(image_path) # width x height σε pixels
+st.markdown("<br><br>", unsafe_allow_html=True)
+st.image(img, use_container_width=True)
+
 
 #st.title("🛒 SmartCart")
 
