@@ -211,10 +211,31 @@ with st.sidebar.expander("🤖 AI Βοηθός", expanded=False):
 # ------------------ SCRAPING ------------------
 with st.expander("🌐 Τιμή από άλλες πηγές (scraping)", expanded=False):
     scrap_term = st.text_input("Προϊόν για τιμή από τρίτο site", key="scraping")
+
     if st.button("🔎 Έλεγχος τιμής από άλλο κατάστημα"):
-        r = requests.get(f"{API_BASE}/scraping/search/{scrap_term}")
-        if r.status_code == 200:
-            result = r.json()
-            st.write(result)
+        if scrap_term.strip():
+            r = requests.get(f"{API_BASE}/scraping/search/{scrap_term}")
+            if r.status_code == 200:
+                result = r.json()
+
+                if isinstance(result, list) and result:
+                    st.subheader(f"🔍 Αποτελέσματα για «{scrap_term}»")
+
+                    for product in result:
+                        col1, col2 = st.columns([1, 3])
+                        with col1:
+                            if product["image"]:
+                                st.image(product["image"], width=100)
+                            else:
+                                st.text("Χωρίς εικόνα")
+                        with col2:
+                            st.markdown(f"**{product['title']}**")
+                            st.markdown(f"💶 Τιμή: `{product['price']}`")
+                            st.markdown(f"[🔗 Προβολή στο κατάστημα]({product['link']})")
+                        st.markdown("---")
+                else:
+                    st.info("Δεν βρέθηκαν προϊόντα.")
+            else:
+                st.warning("⚠️ Σφάλμα κατά το scraping.")
         else:
-            st.warning("Σφάλμα κατά το scraping.")
+            st.warning("Παρακαλώ εισάγετε ένα προϊόν.")

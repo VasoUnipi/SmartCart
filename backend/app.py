@@ -2,9 +2,10 @@ from flask import Flask, request, jsonify
 from flask_pymongo import PyMongo
 from bson.objectid import ObjectId
 from datetime import datetime
-#from flask_cors import CORS
+from scraping import scraping_bp
 
 app = Flask(__name__)
+app.register_blueprint(scraping_bp)
 
 app.config['MONGO_URI'] = 'mongodb://mongo:27017/smartcart'
 mongo = PyMongo(app)
