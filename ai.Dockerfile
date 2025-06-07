@@ -4,7 +4,7 @@ WORKDIR /app
 
 COPY ai.py ./
 
-RUN pip install --no-cache-dir flask requests python-dotenv
+RUN pip install --no-cache-dir flask requests python-dotenv nltk
 
 EXPOSE 5001
 

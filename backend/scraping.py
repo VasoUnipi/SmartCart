@@ -1,94 +1,102 @@
-from flask import Blueprint, jsonify
 import requests
-from urllib.parse import quote_plus, quote
+from bs4 import BeautifulSoup
+import re
+from unidecode import unidecode
+from flask import Blueprint, request, jsonify
 
 scraping_bp = Blueprint('scraping', __name__)
 
-def greek_to_greeklish(text):
-    mapping = {
-        'α': 'a', 'ά': 'a',
-        'β': 'v',
-        'γ': 'g',
-        'δ': 'd',
-        'ε': 'e', 'έ': 'e',
-        'ζ': 'z',
-        'η': 'i', 'ή': 'i',
-        'θ': 'th',
-        'ι': 'i', 'ί': 'i', 'ϊ': 'i', 'ΐ': 'i',
-        'κ': 'k',
-        'λ': 'l',
-        'μ': 'm',
-        'ν': 'n',
-        'ξ': 'x',
-        'ο': 'o', 'ό': 'o',
-        'π': 'p',
-        'ρ': 'r',
-        'σ': 's', 'ς': 's',
-        'τ': 't',
-        'υ': 'y', 'ύ': 'y', 'ϋ': 'y', 'ΰ': 'y',
+@scraping_bp.route('/api/mymarket-scrape', methods=['GET'])
+def mymarket_scrape():
+    product_name = request.args.get('product_name')
+    if not product_name:
+        return jsonify({"error": "Missing product_name parameter"}), 400
+
+    result = scrape_mymarket_product(product_name)  # η συνάρτηση scraping σου
+    return jsonify(result)
+
+
+def slugify(text):
+        # Πρώτα κάνουμε μερικές αντικαταστάσεις για να ταιριάζει το site
+    replacements = {
+        'η': 'i',
+        'ή': 'ι',
+        'Ή': 'Ι',
+        'ς': 'σ', 
         'φ': 'f',
-        'χ': 'x',
-        'ψ': 'ps',
-        'ω': 'o', 'ώ': 'o',
+        'Φ': 'f',
+        'υ': 'y',
+        'χ': 'ch',
+        'Χ': 'ch',
+        'Αυγά': 'avga',
+        'αυγά': 'avga',
+        'b': 'v',
+        'Αλουμινόφυλλο': 'alouminofyllo',
+        'Φράουλα': 'fraoula',
+        'Iceberg': 'iceberg',
+        'Πλευρώτους': 'plevrotous',
+        'Μαρουλένια': 'maroulenia',
+        'Που': 'pou',
+        'Κοτόπουλου': 'kotopoulou',
+        'Κοτόπουλο': 'kotopoulo',
+        'Ρύζι': 'ryzi',
+        'Β': 'v',
+        'β': 'v',
+        'Στεργίου Κρουασάν Βουτύρου': 'stergiou-krouasan-voutyrou',
+        'Παπαδοπούλου': 'papadopoulou',
+        'Μπύρα': 'mpyra',
+        'Κουτί': 'kouti',
+        '1,5lt': '15lt',
+        'Ουίσκι': 'ouiski',
     }
-    return ''.join(mapping.get(c.lower(), c) for c in text)
+    for orig, repl in replacements.items():
+        text = text.replace(orig, repl)
+    # Μετατροπή σε λατινικούς χαρακτήρες, πεζά, παύλες αντί για κενά, χωρίς ειδικούς χαρακτήρες
+    text = unidecode(text)
+    text = text.lower()
+    text = re.sub(r'[^a-z0-9]+', '-', text)
+    text = re.sub(r'-+', '-', text)
+    text = text.strip('-')
+    return text
 
-# ✅ Δηλώνουμε σωστά το route
-@scraping_bp.route("/scraping/search/<term>", methods=["GET"])
-def scrape_ab(term):
-    try:
-        # Μετατροπή σε greeklish για χρήση στο URL
-        greeklish_term = greek_to_greeklish(term)
-        query = quote(greeklish_term)
+def scrape_mymarket_product(product_name):
+    slug = slugify(product_name)
+    product_url = f"https://www.mymarket.gr/{slug}"
 
-        url = "https://www.ab.gr/api/v1/"
-        params = {
-            "operationName": "GetProductSearch",
-            "variables": f'{{"lang":"gr","searchQuery":"{query}","pageNumber":0,"pageSize":20,"filterFlag":true,"fields":"PRODUCT_TILE","plainChildCategories":true,"useSpellingSuggestion":true}}',
-            "extensions": '{"persistedQuery":{"version":1,"sha256Hash":"d1422cd4a4d0404f06cc547ad892b50102e8849a9fbc064e030faf3c31a3ae3c"}}'
-        }
+    headers = {
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)"
+    }
 
-        headers = {
-            "User-Agent": "Mozilla/5.0",
-            "Accept": "application/json"
-        }
+    res = requests.get(product_url, headers=headers)
+    if res.status_code != 200:
+        return {"error": "Product page not found", "url": product_url}
 
-        response = requests.get(url, headers=headers, params=params)
-        data = response.json()
+    soup = BeautifulSoup(res.text, "html.parser")
 
-        products = data.get("data", {}).get("productSearch", {}).get("products", [])
-        results = []
+    # Όνομα προϊόντος - από meta property og:title ή h1
+    og_title = soup.find("meta", property="og:title")
+    if og_title and og_title.get("content"):
+        name = og_title["content"].split("|")[0].strip()
+    else:
+        h1 = soup.find("h1", class_="text-2xl")
+        name = h1.text.strip() if h1 else product_name
 
-        for product in products[:10]:
-            title = product.get("name", "")
-            url_path = product.get("url", "")
-            link = f"https://www.ab.gr{url_path}"
+    # Τιμή προϊόντος - ψάχνουμε το span με την κλάση που βγάζει την τελική τιμή
+    price_span = soup.find("span", class_="product-full--final-price")
+    price = price_span.text.strip() if price_span else "N/A"
 
-            # Απόκτηση τιμής
-            price_info = product.get("price", {})
-            price = price_info.get("price") or price_info.get("value") or "N/A"
+    # URL εικόνας - από tag <link rel="preload" href="...">
+    link_img = soup.find("link", rel="preload", attrs={"as": "image"})
+    image_url = link_img["href"] if link_img else None
 
-            # Απόκτηση εικόνας
-            image_url = ""
-            images = product.get("images", [])
-            for img in images:
-                if img.get("format") == "respListGrid" and img.get("imageType") == "PRIMARY":
-                    image_url = "https://www.ab.gr" + img.get("url", "")
-                    break
-            if not image_url and images:
-                image_url = "https://www.ab.gr" + images[0].get("url", "")
-
-            results.append({
-                "title": title,
-                "price": f"{price}€" if price != "N/A" else "Μη διαθέσιμη",
-                "link": link,
-                "image": image_url
-            })
-
-        if not results:
-            return jsonify({"message": "Δεν βρέθηκαν προϊόντα."})
-
-        return jsonify(results)
-
-    except Exception as e:
-        return jsonify({"error": str(e)}), 500
+    return {
+        "name": name,
+        "price": price,
+        "image_url": image_url,
+        "product_url": product_url
+    }
+    # Για γρήγορο test
+if __name__ == "__main__":
+    product_name = "Οικογένεια Στεργίου Κρουασάν Βουτύρου 260gr"
+    result = scrape_mymarket_product(product_name)
+    print(result) 

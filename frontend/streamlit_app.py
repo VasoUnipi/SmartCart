@@ -214,28 +214,30 @@ with st.expander("🌐 Τιμή από άλλες πηγές (scraping)", expand
 
     if st.button("🔎 Έλεγχος τιμής από άλλο κατάστημα"):
         if scrap_term.strip():
-            r = requests.get(f"{API_BASE}/scraping/search/{scrap_term}")
-            if r.status_code == 200:
-                result = r.json()
+            try:
+                # Κλήση στο backend endpoint σου
+                r = requests.get(f"{API_BASE}/api/mymarket-scrape", params={"product_name": scrap_term})
+                if r.status_code == 200:
+                    result = r.json()
 
-                if isinstance(result, list) and result:
-                    st.subheader(f"🔍 Αποτελέσματα για «{scrap_term}»")
-
-                    for product in result:
+                    # Έλεγχος αν επιστράφηκε τιμή
+                    if "name" in result:
+                        st.subheader(f"🔍 Αποτέλεσμα για «{result['name']}»")
                         col1, col2 = st.columns([1, 3])
                         with col1:
-                            if product["image"]:
-                                st.image(product["image"], width=100)
+                            if result["image_url"]:
+                                st.image(result["image_url"], width=100)
                             else:
                                 st.text("Χωρίς εικόνα")
                         with col2:
-                            st.markdown(f"**{product['title']}**")
-                            st.markdown(f"💶 Τιμή: `{product['price']}`")
-                            st.markdown(f"[🔗 Προβολή στο κατάστημα]({product['link']})")
-                        st.markdown("---")
+                            st.markdown(f"**{result['name']}**")
+                            st.markdown(f"💶 Τιμή: `{result['price']}`")
+                            st.markdown(f"[🔗 Προβολή στο κατάστημα]({result['product_url']})")
+                    else:
+                        st.info("Δεν βρέθηκε προϊόν.")
                 else:
-                    st.info("Δεν βρέθηκαν προϊόντα.")
-            else:
-                st.warning("⚠️ Σφάλμα κατά το scraping.")
+                    st.warning("⚠️ Σφάλμα κατά το scraping.")
+            except Exception as e:
+                st.error(f"❌ Σφάλμα: {e}")
         else:
             st.warning("Παρακαλώ εισάγετε ένα προϊόν.")

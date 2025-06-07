@@ -4,3 +4,5 @@ flask-pymongo
 pandas
 beautifulsoup4
 requests
+unidecode
+nltk
