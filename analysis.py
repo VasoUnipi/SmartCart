@@ -1,20 +1,22 @@
-from flask import Flask, send_file
+from flask import Flask, send_file, request, jsonify
 from pymongo import MongoClient
 from collections import Counter
-import matplotlib.pyplot as plt
 from bson import ObjectId
+import matplotlib.pyplot as plt
 import io
 
 app = Flask(__name__)
 
-client = MongoClient("mongodb://host.docker.internal:27017/")  # ή αλλάζεις αν έχεις docker-compose
+# Σύνδεση με MongoDB
+client = MongoClient("mongodb://host.docker.internal:27017/")
 db = client["smartcart_db"]
-carts = db["carts"]
+purchases = db["purchases"]
 products = db["products"]
 
+# Top 5 δημοφιλέστερα προϊόντα
 @app.route("/api/analysis/top-products")
 def top_products():
-    purchases = carts.find({"checked_out": True})
+    purchases = purchases.find()
     product_counter = Counter()
 
     for purchase in purchases:
@@ -45,6 +47,7 @@ def top_products():
 
     return send_file(img, mimetype='image/png')
 
+# Αριθμός αγορών ανά ημέρα
 @app.route("/api/analysis/purchases-per-day")
 def purchases_per_day():
     pipeline = [
@@ -74,5 +77,63 @@ def purchases_per_day():
 
     return send_file(img, mimetype='image/png')
 
+# Συνήθως αγοράζονται μαζί
+@app.route("/api/analysis/frequently-bought-together")
+def frequently_bought_together():
+    target_id = request.args.get("product_id")
+    if not target_id:
+        return jsonify({"error": "Missing product_id"}), 400
+
+    co_occurrence = Counter()
+    purchases = purchases.find()
+
+    for purchase in purchases:
+        items = [str(item["product_id"]) for item in purchase.get("items", [])]
+        if target_id in items:
+            for pid in items:
+                if pid != target_id:
+                    co_occurrence[pid] += 1
+
+    top_related = co_occurrence.most_common(3)
+    related_products = []
+    for pid, count in top_related:
+        prod = products.find_one({"_id": ObjectId(pid)})
+        if prod:
+            related_products.append({
+                "product_id": pid,
+                "name": prod["name"],
+                "times_bought_together": count
+            })
+
+    return jsonify(related_products)
+
+# Αυτόματη δημιουργία καλαθιού βάσει επαναλαμβανόμενων αγορών
+@app.route("/api/analysis/auto-cart")
+def auto_cart():
+    product_counter = Counter()
+    purchases = purchases.find()
+
+    for purchase in purchases:
+        seen = set()
+        for item in purchase.get("items", []):
+            pid = str(item["product_id"])
+            if pid not in seen:
+                product_counter[pid] += 1
+                seen.add(pid)
+
+    recommended = product_counter.most_common(5)
+    cart_suggestion = []
+    for pid, freq in recommended:
+        prod = products.find_one({"_id": ObjectId(pid)})
+        if prod:
+            cart_suggestion.append({
+                "product_id": pid,
+                "name": prod["name"],
+                "recommended_quantity": 1
+            })
+
+    return jsonify(cart_suggestion)
+
+# Εκκίνηση του Flask app
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5002)
