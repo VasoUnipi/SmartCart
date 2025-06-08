@@ -8,7 +8,18 @@ import nltk
 from nltk.corpus import words
 import re
 nltk.download('words')
+# Φόρτωσε τοπικά τις μεταβλητές περιβάλλοντος
+load_dotenv()
 
+app = Flask(__name__)
+
+# Πάρε το API key από το περιβάλλον χωρίς default τιμή
+GROQ_API_KEY = os.getenv("GROQ_API_KEY")
+if not GROQ_API_KEY:
+    raise ValueError("GROQ_API_KEY is not set in environment variables")
+
+GROQ_API_URL = "https://api.groq.com/openai/v1/chat/completions"
+GROQ_MODEL = "llama3-8b-8192"
 
 def is_fake_word(word):
     greek_chars = re.findall(r"[Α-Ωα-ω]", word)
@@ -51,46 +62,7 @@ def aggressive_clean_response(text):
         cleaned.append(line)
 
     return '\n'.join(cleaned)
-
-
-# Φόρτωσε τοπικά τις μεταβλητές περιβάλλοντος
-load_dotenv()
-
-app = Flask(__name__)
-
-# Πάρε το API key από το περιβάλλον χωρίς default τιμή
-GROQ_API_KEY = os.getenv("GROQ_API_KEY")
-if not GROQ_API_KEY:
-    raise ValueError("GROQ_API_KEY is not set in environment variables")
-
-GROQ_API_URL = "https://api.groq.com/openai/v1/chat/completions"
-GROQ_MODEL = "llama3-8b-8192"
-
-def clean_response(text):
-    lines = text.splitlines()
-    cleaned = []
-
-    for line in lines:
-        line = line.strip()
-        if not line:
-            continue
-
-        # Αν περιέχει περισσότερα ξένα γράμματα από ελληνικά, πετά το
-        greek_count = len(re.findall(r"[Α-Ωα-ω]", line))
-        foreign_count = len(re.findall(r"[A-Za-zА-Яа-я]", line))
-        if foreign_count > greek_count:
-            continue
-
-        # Αν περιέχει "εικονικά" συστατικά (π.χ. Sκόρδοallas, izmetoume), πετά το
-        if re.search(r"(alledas|einen|из|necessary|izmetoume|pokud|zout|sous)", line, re.IGNORECASE):
-            continue
-
-        cleaned.append(line)
-
-    return '\n'.join(cleaned)
-
-
-
+    
 def groq_request(prompt):
     headers = {
         "Authorization": f"Bearer {GROQ_API_KEY}",
