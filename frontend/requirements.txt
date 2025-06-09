@@ -1,5 +1,5 @@
 flask
 python-dotenv
-streamlit
+streamlit==1.31.1
 requests
 

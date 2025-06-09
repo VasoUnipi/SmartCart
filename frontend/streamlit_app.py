@@ -9,6 +9,7 @@ API_BASE = "http://backend:5000"
 
 st.set_page_config(page_title="SmartCart", page_icon="🛒", layout="wide")
 
+
 # ------------------ SESSION STATE ------------------
 if 'user_id' not in st.session_state:
     st.session_state.user_id = ''
@@ -20,12 +21,45 @@ if 'show_results' not in st.session_state:
     st.session_state.show_results = False
 if 'results' not in st.session_state:
     st.session_state.results = []
+if 'checkout_complete' not in st.session_state:
+    st.session_state.checkout_complete = False
+if st.session_state.checkout_complete:
+    # 🎈 Εφέ μπαλονιών
+    st.balloons()
 
+    # 🔙 Κουμπί πάνω αριστερά
+    col_left, col_space, col_main = st.columns([1, 1, 8])
+    with col_left:
+        if st.button("Επιστροφή στην αρχική"):
+            st.session_state.checkout_complete = False
+            st.session_state.show_results = False
+            st.session_state.user_id = ''
+            st.experimental_rerun()
+
+    # 🧭 Κεντραρισμένο περιεχόμενο
+    st.markdown("<br><br>", unsafe_allow_html=True)
+    st.markdown(
+        """
+        <div style='text-align: center;'>
+            <h2>Η αγορά ολοκληρώθηκε επιτυχώς!</h2>
+            <img src='https://cdn-icons-png.flaticon.com/512/845/845646.png' width='120'>
+            <p style='font-size: 20px;'>Ευχαριστούμε για την προτίμησή σας! 🛍️</p>
+        </div>
+        """,
+        unsafe_allow_html=True
+    )
+    st.stop()
+
+
+    if st.button("Επιστροφή στην αρχική σελίδα"):
+        st.session_state.checkout_complete = False
+        st.session_state.show_results = False
+        st.experimental_rerun()
+    st.stop()  # Σταματά το υπόλοιπο της σελίδας
 
 image_path = os.path.join(os.path.dirname(__file__), "logos", "2.png")
 img = Image.open(image_path) # width x height σε pixels
 st.markdown("<br><br>", unsafe_allow_html=True)
-st.image(img, use_container_width=True)
 
 
 #st.title("🛒 SmartCart")
@@ -56,8 +90,29 @@ def search_products(name=None, category=None, price=None):
         return []
 
 def get_cart(user_id):
-    r = requests.get(f"{API_BASE}/cart/{user_id}")
-    return r.json() if r.status_code == 200 else []
+    try:
+        r = requests.get(f"{API_BASE}/cart/{user_id}")
+        if r.status_code != 200:
+            return []
+        items = r.json()
+
+        # Φέρε όλα τα προϊόντα μία φορά
+        r_products = requests.get(f"{API_BASE}/products")
+        products = r_products.json() if r_products.status_code == 200 else []
+
+        # Κάνε map id -> product
+        product_map = {p["_id"]: p for p in products}
+
+        # Εμπλούτισε το καλάθι με όνομα/εικόνα κλπ
+        for item in items:
+            prod = product_map.get(item["product_id"])
+            if prod:
+                item["name"] = prod.get("name")
+                item["image_url"] = prod.get("image_url")
+                item["price"] = prod.get("price", 1)  # Χρήσιμο για υπολογισμό συνόλου
+        return items
+    except:
+        return []
 
 def add_to_cart(user_id, product):
     product['user_id'] = user_id
@@ -78,10 +133,13 @@ def checkout(user_id):
 
 # ------------------ USER ID ------------------
 st.sidebar.subheader("🧑 Είσοδος Χρήστη")
-user_input = st.sidebar.text_input("Δώσε το User ID σου:", value=st.session_state.get('user_id', ''))
+user_input = st.sidebar.text_input("Παρακαλώ εισάγετε όνομα χρήστη:", value=st.session_state.get('user_id', ''))
 if user_input:
     st.session_state.user_id = user_input
-
+# ------------------ ΥΠΟΧΡΕΩΤΙΚΟ USER ID ------------------
+if not st.session_state.user_id:
+    st.warning("⚠️ Παρακαλώ εισάγετε το User ID σας από το μενού στα αριστερά για να συνεχίσετε.")
+    st.stop()
 # ------------------ ΚΟΡΔΕΛΑ ------------------
 st.markdown("""
     <style>
@@ -142,36 +200,69 @@ if st.session_state.show_results:
         st.info("Δεν βρέθηκαν προϊόντα.")
 
 # ------------------ ΚΑΛΑΘΙ ------------------
-st.markdown("---")
-st.subheader("🧺 Το Καλάθι Μου")
-st.markdown(f"**User ID:** `{st.session_state.user_id}`")
-cart_items = get_cart(st.session_state.user_id)
-total = 0
+#st.markdown("---")
+#st.subheader("🧺 Το Καλάθι Μου")
+#st.markdown(f"**User ID:** `{st.session_state.user_id}`")
+#cart_items = get_cart(st.session_state.user_id)
+#total = 0
 
-for item in cart_items:
-    st.markdown(f"**{item['product_id']}** - Ποσότητα: {item['quantity']}")
-    col1, col2, col3 = st.columns(3)
-    new_qty = col1.number_input("Αλλαγή ποσότητας", min_value=1, max_value=10, value=item['quantity'], key=f"uq_{item['_id']}")
-    if col2.button("Ενημέρωση", key=f"uqbtn_{item['_id']}"):
-        if update_quantity(item['_id'], new_qty):
-            st.success("Ενημερώθηκε")
-        else:
-            st.error("Σφάλμα ενημέρωσης")
-    if col3.button("❌ Αφαίρεση", key=f"rm_{item['_id']}"):
-        if delete_cart_item(item['_id']):
-            st.success("Διαγράφηκε")
-        else:
-            st.error("Αποτυχία διαγραφής")
-    total += item['quantity'] * 1
+#for item in cart_items:
+ #   st.markdown(f"**{item['product_id']}** - Ποσότητα: {item['quantity']}")
+  #  col1, col2, col3 = st.columns(3)
+   # new_qty = col1.number_input("Αλλαγή ποσότητας", min_value=1, max_value=10, value=item['quantity'], key=f"uq_{item['_id']}")
+    #if col2.button("Ενημέρωση", key=f"uqbtn_{item['_id']}"):
+     #   if update_quantity(item['_id'], new_qty):
+      #      st.success("Ενημερώθηκε")
+       # else:
+        #    st.error("Σφάλμα ενημέρωσης")
+    #if col3.button("❌ Αφαίρεση", key=f"rm_{item['_id']}"):
+     #   if delete_cart_item(item['_id']):
+      #      st.success("Διαγράφηκε")
+       # else:
+        #    st.error("Αποτυχία διαγραφής")
+    #total += item['quantity'] * 1
 
-st.info(f"Σύνολο προϊόντων: {total}")
-if st.button("✅ Ολοκλήρωση Αγοράς"):
-    if checkout(st.session_state.user_id):
-        st.success("Η αγορά ολοκληρώθηκε!")
-        st.session_state.results = []
-        st.session_state.show_results = False
-    else:
-        st.error("Το καλάθι είναι άδειο ή απέτυχε η πληρωμή.")
+#st.info(f"Σύνολο προϊόντων: {total}")
+#if st.button("✅ Ολοκλήρωση Αγοράς"):
+ #   if checkout(st.session_state.user_id):
+  #      st.success("Η αγορά ολοκληρώθηκε!")
+   #     st.session_state.results = []
+    #    st.session_state.show_results = False
+    #else:
+     #   st.error("Το καλάθι είναι άδειο ή απέτυχε η πληρωμή.")
+# ------------------ SIDEBAR ΚΑΛΑΘΙ ------------------
+if st.session_state.user_id:
+    st.sidebar.markdown("---")
+    st.sidebar.subheader("🧺 Το Καλάθι Μου")
+    cart_items = get_cart(st.session_state.user_id)
+    total = 0
+
+    for item in cart_items:
+        st.sidebar.markdown("----")
+        product_name = item.get('name', item.get('product_id', 'Άγνωστο'))
+        image_url = item.get('image_url', "https://via.placeholder.com/100")
+        st.sidebar.image(image_url, width=100)
+        st.sidebar.markdown(f"**{product_name}**")
+        st.sidebar.markdown(f"Ποσότητα: {item['quantity']}")
+        total += item['quantity'] * 1  # Αν θες πραγματική τιμή, φέρε και price
+
+    st.sidebar.markdown(f"**Σύνολο προϊόντων:** `{total}`")
+
+    if st.sidebar.button("✅ Ολοκλήρωση Αγοράς"):
+        if checkout(st.session_state.user_id):
+            st.session_state.checkout_complete = True
+            st.experimental_rerun()
+        else:
+            st.sidebar.error("Το καλάθι είναι άδειο ή απέτυχε η πληρωμή.")
+# ------------------ ΟΘΟΝΗ ΟΛΟΚΛΗΡΩΣΗΣ ------------------
+if st.session_state.get("checkout_complete"):
+    st.markdown("## Η αγορά ολοκληρώθηκε επιτυχώς!")
+    st.markdown("Μπορείτε να επιστρέψετε στην αρχική σελίδα.")
+    if st.button("Επιστροφή"):
+        st.session_state.checkout_complete = False
+        st.experimental_rerun()
+        st.session_state.useri_id = ''
+    st.stop()
 # ------------------ AI ΒΟΗΘΟΣ ------------------
 with st.sidebar.expander("🤖 AI Βοηθός", expanded=False):
     ai_option = st.selectbox("Λειτουργία", [
