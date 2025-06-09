@@ -103,24 +103,18 @@ def checkout(user_id):
 
     mongo.db.purchases.insert_one({
         "user_id": user_id,
-        "items": cart_items,
+        "items": [
+            {
+                "product_id": item["product_id"],
+                "quantity": item["quantity"]
+            }
+            for item in cart_items
+        ],
         "timestamp": datetime.now()
     })
 
     mongo.db.carts.delete_many({"user_id": user_id})
     return jsonify({"message": "Purchase complete"}), 200
-
-@app.route('/purchases/<user_id>', methods=['GET'])
-def get_purchases(user_id):
-    history = list(mongo.db.purchases.find({"user_id": user_id}))
-    for h in history:
-        h['_id'] = str(h['_id'])
-        h['timestamp'] = h['timestamp'].isoformat()
-        for item in h['items']:
-            item['_id'] = str(item['_id'])
-            item['product_id'] = str(item['product_id']) if 'product_id' in item else ''
-    return jsonify(history), 200
-
 
 if __name__ == '__main__':
     app.run(debug=True, host='0.0.0.0')
