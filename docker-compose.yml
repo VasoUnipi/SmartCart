@@ -36,31 +36,6 @@ services:
     networks:
       - smartcart-net
 
-  ai:
-    build:
-      context: .
-      dockerfile: ai.Dockerfile
-    container_name: smartcart-ai
-    ports:
-      - "5001:5001"
-    depends_on:
-      - backend
-    env_file:
-      - .env
-    networks:
-      - smartcart-net
-
-  streamlit_analysis:
-    build:
-      context: .
-      dockerfile: streamlit_analysis.Dockerfile
-    container_name: smartcart_streamlit-analysis
-    ports:
-      - "8502:8502"
-    depends_on:
-      - mongo
-    networks:
-      - smartcart-net
 
 volumes:
   mongo_data:

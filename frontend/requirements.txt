@@ -2,4 +2,4 @@ flask
 python-dotenv
 streamlit==1.31.1
 requests
-
+groq

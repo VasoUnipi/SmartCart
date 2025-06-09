@@ -2,13 +2,20 @@ from flask import Flask, request, jsonify
 from flask_pymongo import PyMongo
 from bson.objectid import ObjectId
 from datetime import datetime
+from pymongo import ASCENDING, DESCENDING
 from scraping import scraping_bp
+import os
+import openai
 
 app = Flask(__name__)
 app.register_blueprint(scraping_bp)
 
 app.config['MONGO_URI'] = 'mongodb://mongo:27017/smartcart'
 mongo = PyMongo(app)
+
+openai.api_key = os.getenv("GROQ_API_KEY")
+openai.api_base = "https://api.groq.com/openai/v1"  # Groq-compatible
+
 
 #------HOMEPAGE------
 # Route: Home page
@@ -21,6 +28,7 @@ def get_products():
     name = request.args.get('name')
     category = request.args.get('category')
     max_price = request.args.get('price')
+    order_by = request.args.get('order_by')  # <-- add this
 
     query = {}
     if name:
@@ -33,7 +41,22 @@ def get_products():
         except ValueError:
             pass
 
-    products = list(mongo.db.products.find(query))
+    # Map the order_by parameter to pymongo sorting
+    sort = None
+    if order_by == "price_asc":
+        sort = [("price", ASCENDING)]
+    elif order_by == "price_desc":
+        sort = [("price", DESCENDING)]
+    elif order_by == "name_asc":
+        sort = [("name", ASCENDING)]
+    elif order_by == "name_desc":
+        sort = [("name", DESCENDING)]
+
+    if sort:
+        products = list(mongo.db.products.find(query).sort(sort))
+    else:
+        products = list(mongo.db.products.find(query))
+
     for p in products:
         p['_id'] = str(p['_id'])
     return jsonify(products)
@@ -84,6 +107,21 @@ def view_cart(user_id):
     return jsonify(enriched_items)
 
 
+@app.route('/cart/ai/<user_id>', methods=['POST'])
+def ai_suggestions(user_id):
+    # Your logic calling Groq/OpenAI or whatever AI service you use
+    # to analyze cart content and return suggestions
+    # Example stub:
+    cart_items = list(mongo.db.carts.find({"user_id": user_id}))
+    if not cart_items:
+        return jsonify({"ai_suggestions": "Το καλάθι είναι άδειο."}), 400
+    
+    # Simulate AI result (replace with actual call to Groq/OpenAI)
+    suggestions = "Προτάσεις από AI βασισμένες στα προϊόντα σας."
+    
+    return jsonify({"ai_suggestions": suggestions}), 200
+
+
 @app.route('/cart/<item_id>', methods=['PUT'])
 def update_quantity(item_id):
     quantity = request.json.get('quantity')
@@ -115,6 +153,8 @@ def checkout(user_id):
 
     mongo.db.carts.delete_many({"user_id": user_id})
     return jsonify({"message": "Purchase complete"}), 200
+
+
 
 if __name__ == '__main__':
     app.run(debug=True, host='0.0.0.0')

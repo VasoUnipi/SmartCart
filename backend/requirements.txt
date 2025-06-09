@@ -7,3 +7,8 @@ requests
 unidecode
 nltk
 matplotlib
+openai
+cors
+flask-cors
+openai
+Groq
