@@ -30,7 +30,7 @@ def plot_top_products():
     names = [get_product_name(pid) for pid, _ in top]
     quantities = [q for _, q in top]
 
-    st.subheader("📊 Top 5 Δημοφιλέστερα Προϊόντα")
+    st.subheader("Top 5 Δημοφιλέστερα Προϊόντα")
     st.bar_chart(pd.DataFrame({"Προϊόν": names, "Ποσότητα": quantities}).set_index("Προϊόν"))
     st.dataframe(pd.DataFrame({"Προϊόν": names, "Ποσότητα": quantities}))
 
@@ -46,7 +46,7 @@ def plot_purchases_per_day():
         st.info("Δεν υπάρχουν καταγεγραμμένες ημερομηνίες.")
         return
     df.columns = ["Ημερομηνία", "Αγορές"]
-    st.subheader("📈 Αριθμός Αγορών Ανά Ημέρα")
+    st.subheader("Αριθμός Αγορών Ανά Ημέρα")
     st.line_chart(df.set_index("Ημερομηνία"))
     st.dataframe(df)
 
@@ -68,7 +68,7 @@ def auto_cart():
     st.table(df)
 
 # Streamlit UI
-st.title("📊 SmartCart | Υποσύστημα Ανάλυσης Δεδομένων")
+st.title("SmartCart | Υποσύστημα Ανάλυσης Δεδομένων")
 
 plot_top_products()
 st.markdown("---")

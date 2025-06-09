@@ -19,6 +19,23 @@ def mymarket_scrape():
 def slugify(text):
         # Πρώτα κάνουμε μερικές αντικαταστάσεις για να ταιριάζει το site
     replacements = {
+        'Στεργίου': 'stergiou',
+        'Κρουασάν' : 'krouasan',
+        'Βουτύρου' : 'voutyrou',
+        'Παπαδοπούλου': 'papadopoulou',
+        'Μπύρα': 'mpyra',
+        'Κουτί': 'kouti',
+        '1,5lt': '15lt',
+        'Ουίσκι': 'ouiski',
+        'Αλουμινόφυλλο': 'alouminofyllo',
+        'Φράουλα': 'fraoula',
+        'Iceberg': 'iceberg',
+        'Πλευρώτους': 'plevrotous',
+        'Μαρουλένια': 'maroulenia',
+        'Που': 'pou',
+        'Κοτόπουλου': 'kotopoulou',
+        'Κοτόπουλο': 'kotopoulo',
+        'Ρύζι': 'ryzi',
         'η': 'i',
         'ή': 'ι',
         'Ή': 'Ι',
@@ -31,23 +48,8 @@ def slugify(text):
         'Αυγά': 'avga',
         'αυγά': 'avga',
         'b': 'v',
-        'Αλουμινόφυλλο': 'alouminofyllo',
-        'Φράουλα': 'fraoula',
-        'Iceberg': 'iceberg',
-        'Πλευρώτους': 'plevrotous',
-        'Μαρουλένια': 'maroulenia',
-        'Που': 'pou',
-        'Κοτόπουλου': 'kotopoulou',
-        'Κοτόπουλο': 'kotopoulo',
-        'Ρύζι': 'ryzi',
         'Β': 'v',
-        'β': 'v',
-        'Στεργίου Κρουασάν Βουτύρου': 'stergiou-krouasan-voutyrou',
-        'Παπαδοπούλου': 'papadopoulou',
-        'Μπύρα': 'mpyra',
-        'Κουτί': 'kouti',
-        '1,5lt': '15lt',
-        'Ουίσκι': 'ouiski',
+        'β': 'v' 
     }
     for orig, repl in replacements.items():
         text = text.replace(orig, repl)

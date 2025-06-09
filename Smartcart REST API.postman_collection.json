@@ -1,0 +1,278 @@
+{
+	"info": {
+		"_postman_id": "0bd75b78-af40-49d9-8a75-bd62e4ae8a15",
+		"name": "Smartcart REST API",
+		"description": "Κλήσεις του REST API",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "40596819"
+	},
+	"item": [
+		{
+			"name": "GET/products",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://localhost:5000/products",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "5000",
+					"path": [
+						"products"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "POST/cart",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n  \"user_id\": \"user1\",\r\n  \"products\": [\r\n    {\r\n      \"product_id\": \"6810f5a53d0187a89f45b2ef\",\r\n      \"quantity\": 2\r\n    }\r\n  ]\r\n}\r\n",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:5000/cart",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "5000",
+					"path": [
+						"cart"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "POST/products/<id>",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n  \"name\": \"ΝΟΥΝΟΥ Βούτυρο Ανάλατο 250gr\",\r\n  \"category\": \"Γαλακτοκομικά & Αυγά\",\r\n  \"price\": 3.2,\r\n  \"description\": \"ΝΟΥΝΟΥ Βούτυρο, ανάλατο από φρέσκο γάλα αγελάδος. Κατάλληλο για μαγειρική και ζαχαροπλαστική.\",\r\n  \"image_url\": \"https://cdn.mymarket.gr/images/styles/original/30_08_21/bec2288a-0ab3-47e7-9a32-0dabae351545_E1.jpg\"\r\n}\r\n",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:5000/products",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "5000",
+					"path": [
+						"products"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "GET/cart/<user_id>",
+			"protocolProfileBehavior": {
+				"disableBodyPruning": true
+			},
+			"request": {
+				"method": "GET",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n  \"name\": \"ΝΟΥΝΟΥ Βούτυρο Ανάλατο 250gr\",\r\n  \"category\": \"Γαλακτοκομικά & Αυγά\",\r\n  \"price\": 3.2,\r\n  \"description\": \"ΝΟΥΝΟΥ Βούτυρο, ανάλατο από φρέσκο γάλα αγελάδος. Κατάλληλο για μαγειρική και ζαχαροπλαστική.\",\r\n  \"image_url\": \"https://cdn.mymarket.gr/images/styles/original/30_08_21/bec2288a-0ab3-47e7-9a32-0dabae351545_E1.jpg\"\r\n}\r\n"
+				},
+				"url": {
+					"raw": "http://localhost:5000/cart/Γιάννης",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "5000",
+					"path": [
+						"cart",
+						"Γιάννης"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "POST/ai/recipe",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n  \"question\": \"Δώσε μου μία συνταγή με τα εξής προϊόντα: γιαούρτι\"\r\n}\r\n",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:5001/ai/recipe",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "5001",
+					"path": [
+						"ai",
+						"recipe"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "PUT /cart/<item_id>",
+			"request": {
+				"method": "PUT",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n  \"quantity\": 3\r\n}\r\n",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:5000/cart/68408fd4dadf99c220eddb5c",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "5000",
+					"path": [
+						"cart",
+						"68408fd4dadf99c220eddb5c"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "DELETE /cart/<item_id>",
+			"request": {
+				"method": "DELETE",
+				"header": [],
+				"url": {
+					"raw": "http://localhost:5000/cart/68408fd4dadf99c220eddb5c",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "5000",
+					"path": [
+						"cart",
+						"68408fd4dadf99c220eddb5c"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "POST /cart/checkout/{user_id}",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"url": {
+					"raw": "http://localhost:5000/cart/checkout/Θανάσης",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "5000",
+					"path": [
+						"cart",
+						"checkout",
+						"Θανάσης"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "GET/cart",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://localhost:5000/cart?user_id=user",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "5000",
+					"path": [
+						"cart"
+					],
+					"query": [
+						{
+							"key": "user_id",
+							"value": "user"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "GET/scraping",
+			"protocolProfileBehavior": {
+				"disableBodyPruning": true
+			},
+			"request": {
+				"method": "GET",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n  \"quantity\": 3\r\n}\r\n"
+				},
+				"url": {
+					"raw": "http://localhost:5000/api/mymarket-scrape?product_name=White Horse Ουίσκι 700ml",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "5000",
+					"path": [
+						"api",
+						"mymarket-scrape"
+					],
+					"query": [
+						{
+							"key": "product_name",
+							"value": "White Horse Ουίσκι 700ml"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "POST/ai/evaluate",
+			"request": {
+				"method": "GET",
+				"header": []
+			},
+			"response": []
+		}
+	]
+}

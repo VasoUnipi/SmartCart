@@ -24,7 +24,7 @@ if 'results' not in st.session_state:
 if 'checkout_complete' not in st.session_state:
     st.session_state.checkout_complete = False
 if st.session_state.checkout_complete:
-    # 🎈 Εφέ μπαλονιών
+    # Εφέ μπαλονιών
     st.balloons()
 
     # 🔙 Κουμπί πάνω αριστερά
@@ -36,7 +36,7 @@ if st.session_state.checkout_complete:
             st.session_state.user_id = ''
             st.experimental_rerun()
 
-    # 🧭 Κεντραρισμένο περιεχόμενο
+    # Κεντραρισμένο περιεχόμενο
     st.markdown("<br><br>", unsafe_allow_html=True)
     st.markdown(
         """
@@ -132,13 +132,13 @@ def checkout(user_id):
     return r.status_code == 200
 
 # ------------------ USER ID ------------------
-st.sidebar.subheader("🧑 Είσοδος Χρήστη")
+st.sidebar.subheader("Είσοδος Χρήστη")
 user_input = st.sidebar.text_input("Παρακαλώ εισάγετε όνομα χρήστη:", value=st.session_state.get('user_id', ''))
 if user_input:
     st.session_state.user_id = user_input
 # ------------------ ΥΠΟΧΡΕΩΤΙΚΟ USER ID ------------------
 if not st.session_state.user_id:
-    st.warning("⚠️ Παρακαλώ εισάγετε το User ID σας από το μενού στα αριστερά για να συνεχίσετε.")
+    st.warning("Παρακαλώ εισάγετε το User ID σας από το μενού στα αριστερά για να συνεχίσετε.")
     st.stop()
 # ------------------ ΚΟΡΔΕΛΑ ------------------
 st.markdown("""
@@ -181,7 +181,7 @@ if not st.session_state.show_results:
 if st.session_state.show_results:
     products = st.session_state.results
     if products:
-        st.markdown("### 📦 Αποτελέσματα")
+        st.markdown("### Αποτελέσματα αναζήτησης")
         cols = st.columns(3)
         for i, product in enumerate(products):
             with cols[i % 3]:
@@ -198,38 +198,6 @@ if st.session_state.show_results:
                         st.error("Αποτυχία προσθήκης")
     else:
         st.info("Δεν βρέθηκαν προϊόντα.")
-
-# ------------------ ΚΑΛΑΘΙ ------------------
-#st.markdown("---")
-#st.subheader("🧺 Το Καλάθι Μου")
-#st.markdown(f"**User ID:** `{st.session_state.user_id}`")
-#cart_items = get_cart(st.session_state.user_id)
-#total = 0
-
-#for item in cart_items:
- #   st.markdown(f"**{item['product_id']}** - Ποσότητα: {item['quantity']}")
-  #  col1, col2, col3 = st.columns(3)
-   # new_qty = col1.number_input("Αλλαγή ποσότητας", min_value=1, max_value=10, value=item['quantity'], key=f"uq_{item['_id']}")
-    #if col2.button("Ενημέρωση", key=f"uqbtn_{item['_id']}"):
-     #   if update_quantity(item['_id'], new_qty):
-      #      st.success("Ενημερώθηκε")
-       # else:
-        #    st.error("Σφάλμα ενημέρωσης")
-    #if col3.button("❌ Αφαίρεση", key=f"rm_{item['_id']}"):
-     #   if delete_cart_item(item['_id']):
-      #      st.success("Διαγράφηκε")
-       # else:
-        #    st.error("Αποτυχία διαγραφής")
-    #total += item['quantity'] * 1
-
-#st.info(f"Σύνολο προϊόντων: {total}")
-#if st.button("✅ Ολοκλήρωση Αγοράς"):
- #   if checkout(st.session_state.user_id):
-  #      st.success("Η αγορά ολοκληρώθηκε!")
-   #     st.session_state.results = []
-    #    st.session_state.show_results = False
-    #else:
-     #   st.error("Το καλάθι είναι άδειο ή απέτυχε η πληρωμή.")
 # ------------------ SIDEBAR ΚΑΛΑΘΙ ------------------
 if st.session_state.user_id:
     st.sidebar.markdown("---")
@@ -237,23 +205,37 @@ if st.session_state.user_id:
     cart_items = get_cart(st.session_state.user_id)
     total = 0
 
-    for item in cart_items:
-        st.sidebar.markdown("----")
-        product_name = item.get('name', item.get('product_id', 'Άγνωστο'))
-        image_url = item.get('image_url', "https://via.placeholder.com/100")
-        st.sidebar.image(image_url, width=100)
-        st.sidebar.markdown(f"**{product_name}**")
-        st.sidebar.markdown(f"Ποσότητα: {item['quantity']}")
-        total += item['quantity'] * 1  # Αν θες πραγματική τιμή, φέρε και price
+total_products = 0
+total_price = 0.0
 
-    st.sidebar.markdown(f"**Σύνολο προϊόντων:** `{total}`")
+for item in cart_items:
+    st.sidebar.markdown("----")
+    product_name = item.get('name', item.get('product_id', 'Άγνωστο'))
+    image_url = item.get('image_url', "https://via.placeholder.com/100")
+    quantity = item['quantity']
+    price = item.get('price', 1.0)
+    item_total = quantity * price
 
-    if st.sidebar.button("✅ Ολοκλήρωση Αγοράς"):
-        if checkout(st.session_state.user_id):
-            st.session_state.checkout_complete = True
-            st.experimental_rerun()
-        else:
-            st.sidebar.error("Το καλάθι είναι άδειο ή απέτυχε η πληρωμή.")
+    st.sidebar.image(image_url, width=100)
+    st.sidebar.markdown(f"**{product_name}**")
+    st.sidebar.markdown(f"Ποσότητα: `{quantity}`")
+    st.sidebar.markdown(f"Τιμή: `{price:.2f}€`")
+    st.sidebar.markdown(f"🧾 Υποσύνολο: `{item_total:.2f}€`")
+
+    total_products += quantity
+    total_price += item_total
+
+# Σύνολα και Checkout κουμπί ΜΕΤΑ από το loop
+st.sidebar.markdown("---")
+st.sidebar.markdown(f"**Σύνολο προϊόντων:** `{total_products}`")
+st.sidebar.markdown(f"**Συνολικό κόστος:** `{total_price:.2f}€`")
+if st.sidebar.button("Ολοκλήρωση Αγοράς"):
+    if checkout(st.session_state.user_id):
+        st.session_state.checkout_complete = True
+        st.experimental_rerun()
+    else:
+        st.sidebar.error("Το καλάθι είναι άδειο ή απέτυχε η πληρωμή.")
+
 # ------------------ ΟΘΟΝΗ ΟΛΟΚΛΗΡΩΣΗΣ ------------------
 if st.session_state.get("checkout_complete"):
     st.markdown("## Η αγορά ολοκληρώθηκε επιτυχώς!")
@@ -322,13 +304,13 @@ with st.expander("🌐 Τιμή από άλλες πηγές (scraping)", expand
                                 st.text("Χωρίς εικόνα")
                         with col2:
                             st.markdown(f"**{result['name']}**")
-                            st.markdown(f"💶 Τιμή: `{result['price']}`")
-                            st.markdown(f"[🔗 Προβολή στο κατάστημα]({result['product_url']})")
+                            st.markdown(f"Τιμή: `{result['price']}`")
+                            st.markdown(f"[Προβολή στο κατάστημα]({result['product_url']})")
                     else:
                         st.info("Δεν βρέθηκε προϊόν.")
                 else:
                     st.warning("⚠️ Σφάλμα κατά το scraping.")
             except Exception as e:
-                st.error(f"❌ Σφάλμα: {e}")
+                st.error(f"Σφάλμα: {e}")
         else:
             st.warning("Παρακαλώ εισάγετε ένα προϊόν.")
