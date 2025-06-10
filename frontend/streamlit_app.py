@@ -145,9 +145,9 @@ with col5:
 with col6:
     if st.button("🔍 Αναζήτηση"):
         order_param = None
-        if order_by == "Τιμή ↑":
+        if order_by == "Τιμή αύξουσα":
             order_param = "price_asc"
-        elif order_by == "Τιμή ↓":
+        elif order_by == "Τιμή φθίνουσα":
             order_param = "price_desc"
         elif order_by == "Όνομα A-Ω":
             order_param = "name_asc"
