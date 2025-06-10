@@ -4,20 +4,23 @@ import re
 from unidecode import unidecode
 from flask import Blueprint, request, jsonify
 
+
+
 scraping_bp = Blueprint('scraping', __name__)
 
+# Ανάκτηση προϊόντων από τη βάση δεδομένων MongoDB
 @scraping_bp.route('/api/mymarket-scrape', methods=['GET']) #Endpoint που ενεργοποιείται από το frontend για scraping
 def mymarket_scrape():
     product_name = request.args.get('product_name')
     if not product_name:
         return jsonify({"error": "Missing product_name parameter"}), 400
 
-    result = scrape_mymarket_product(product_name)  # η συνάρτηση scraping σου
+    result = scrape_mymarket_product(product_name)  # η συνάρτηση scraping
     return jsonify(result)
 
-
+# Συνάρτηση για τη μετατροπή του ονόματος προϊόντος σε slug
 def slugify(text):
-        # Πρώτα κάνουμε μερικές αντικαταστάσεις για να ταιριάζει το site
+        # Πρώτα κάνουμε μερικές αντικαταστάσεις για να ταιριάζει στο site
     replacements = {
         'Στεργίου': 'stergiou',
         'Κρουασάν' : 'krouasan',
@@ -51,6 +54,7 @@ def slugify(text):
         'Β': 'v',
         'β': 'v' 
     }
+    # Αντικαθιστούμε τα ελληνικά γράμματα με τα αντίστοιχα λατινικά
     for orig, repl in replacements.items():
         text = text.replace(orig, repl)
     # Μετατροπή σε λατινικούς χαρακτήρες, πεζά, παύλες αντί για κενά, χωρίς ειδικούς χαρακτήρες
@@ -60,7 +64,7 @@ def slugify(text):
     text = re.sub(r'-+', '-', text)
     text = text.strip('-')
     return text
-
+# Συνάρτηση για scraping προϊόντος από το My Market
 def scrape_mymarket_product(product_name):
     slug = slugify(product_name)
     product_url = f"https://www.mymarket.gr/{slug}"

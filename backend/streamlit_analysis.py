@@ -11,7 +11,7 @@ db = client["smartcart"]
 purchases = db["purchases"]
 products = db["products"]
 
-# Utility: Εύρεση ονόματος προϊόντος
+# Συνάρτηση για την ανάκτηση ονόματος προϊόντος από το ID
 def get_product_name(pid):
     try:
         obj_id = ObjectId(pid)
@@ -29,7 +29,7 @@ def plot_top_products():
     top = counter.most_common(5)
     names = [get_product_name(pid) for pid, _ in top]
     quantities = [q for _, q in top]
-
+    # Εμφάνιση γραφήματος και πίνακα
     st.subheader("Top 5 Δημοφιλέστερα Προϊόντα")
     st.bar_chart(pd.DataFrame({"Προϊόν": names, "Ποσότητα": quantities}).set_index("Προϊόν"))
     st.dataframe(pd.DataFrame({"Προϊόν": names, "Ποσότητα": quantities}))
@@ -51,6 +51,7 @@ def plot_purchases_per_day():
     st.dataframe(df)
 
 # Αυτόματο καλάθι
+# Συνάρτηση για αυτόματη δημιουργία καλαθιού με τα 5 πιο δημοφιλή προϊόντα
 def auto_cart():
     counter = Counter()
     for purchase in purchases.find():
@@ -64,12 +65,13 @@ def auto_cart():
     names = [get_product_name(pid) for pid, _ in top]
     df = pd.DataFrame({"Προϊόν": names, "Προτεινόμενη Ποσότητα": [1] * len(names)})
 
-    st.subheader("🛒 Αυτόματη Δημιουργία Καλαθιού")
+    st.subheader("Αυτόματη Δημιουργία Καλαθιού")
     st.table(df)
 
 # Streamlit UI
+# Ρύθμιση της σελίδας
 st.title("SmartCart | Υποσύστημα Ανάλυσης Δεδομένων")
-
+# Ρυθμίσεις εμφάνισης
 plot_top_products()
 st.markdown("---")
 plot_purchases_per_day()

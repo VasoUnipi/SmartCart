@@ -20,13 +20,14 @@ mongo = PyMongo(app)
 
 # Ρύθμιση του OpenAI API για χρήση με Groq
 openai.api_key = os.getenv("GROQ_API_KEY")
-openai.api_base = "https://api.groq.com/openai/v1"  # Groq-compatible
+openai.api_base = "https://api.groq.com/openai/v1"  
 
-#------HOMEPAGE------
-# Route: Home page
+#------ΑΡΧΙΚΗ ΣΕΛΙΔΑ------
+
 @app.route('/')
 def home():
     return "🚀 Το SmartCart app τρέχει σωστά!"
+
 #Δημιουργία endpoint για την προβολή όλων των προϊόντων
 @app.route('/products', methods=['GET'])
 #Ανάκτηση φίλτρων αναζήτησης από το URL
@@ -34,8 +35,8 @@ def get_products():
     name = request.args.get('name')
     category = request.args.get('category')
     max_price = request.args.get('price')
-    order_by = request.args.get('order_by')  # <-- add this
-#Δημιουργία ερωτήματος για αναζήτηση προϊόντων ανεξαρτήτως πεζών και κεφαλαίων
+    order_by = request.args.get('order_by')
+#Αναζήτηση προϊόντων ανεξαρτήτως πεζών και κεφαλαίων
     query = {}
     if name:
         query['name'] = {'$regex': name, '$options': 'i'}
@@ -47,7 +48,7 @@ def get_products():
         except ValueError:
             pass
 
-    # Map the order_by parameter to pymongo sorting
+    # Map στην order_by παραμετρο στο pymongo
     sort = None
     if order_by == "price_asc":
         sort = [("price", ASCENDING)]
@@ -72,21 +73,22 @@ def get_products():
 @app.route('/products', methods=['POST'])
 def create_products():
     data = request.json
-    if isinstance(data, list):  # multiple products
+    if isinstance(data, list):  # πολλαπλά προϊόντα
         result = mongo.db.products.insert_many(data)
         ids = [str(id) for id in result.inserted_ids]
         return jsonify({'message': f'{len(ids)} products created', 'ids': ids}), 201
-    else:  # single product
+    else:  # ενα μεμονωμένο προϊόν
         result = mongo.db.products.insert_one(data) #προσθήκη ενός προϊόντος στη βάση δεδομένων
         return jsonify({'message': 'Product created', 'id': str(result.inserted_id)}), 201 #επιστροφή μηνύματος επιτυχίας με το ID του προϊόντος
 
-#Δημιουργία endpoint για την προσθήκη ενός συγκεκριμένου προϊόντος 
+#Δημιουργία endpoint για την προσθήκη ενός συγκεκριμένου προϊόντος στο καλάθι
 @app.route('/cart', methods=['POST'])
 def add_to_cart():
     data = request.json
     mongo.db.carts.insert_one(data)
     return jsonify({"message": "Item added to cart"}), 201
 
+#Δημιουργία endpoint για την προβολή όλων των προϊόντων στο καλάθι ενός χρήστη
 @app.route('/cart', methods=['GET'])
 def get_cart():
     user_id = request.args.get('user_id')
@@ -97,7 +99,7 @@ def get_cart():
         item['_id'] = str(item['_id'])
     return jsonify(cart_items)
 
-
+# Δημιουργία endpoint για την προβολή όλων των προϊόντων στο καλάθι ενός χρήστη με βάση το user_id
 @app.route('/cart/<user_id>', methods=['GET'])
 def view_cart(user_id):
     cart_items = list(mongo.db.carts.find({"user_id": user_id}))
@@ -114,33 +116,34 @@ def view_cart(user_id):
             })
     return jsonify(enriched_items)
 
-
+# Δημιουργία endpoint για AI προτάσεις βασισμένες στο περιεχόμενο του καλαθιού
 @app.route('/cart/ai/<user_id>', methods=['POST'])
 def ai_suggestions(user_id):
-    # Your logic calling Groq/OpenAI or whatever AI service you use
-    # to analyze cart content and return suggestions
-    # Example stub:
+    # υλοποιηση της λογικής για την ανάλυση του καλαθιού και την επιστροφή προτάσεων
+    # Ανάκτηση των προϊόντων του καλαθιού από τη βάση δεδομένων
     cart_items = list(mongo.db.carts.find({"user_id": user_id}))
     if not cart_items:
         return jsonify({"ai_suggestions": "Το καλάθι είναι άδειο."}), 400
     
-    # Simulate AI result (replace with actual call to Groq/OpenAI)
+    # Συλλογή ονομάτων προϊόντων για ανάλυση
     suggestions = "Προτάσεις από AI βασισμένες στα προϊόντα σας."
     
     return jsonify({"ai_suggestions": suggestions}), 200
 
-
+# Δημιουργία endpoint για την ενημέρωση της ποσότητας ενός προϊόντος στο καλάθι
 @app.route('/cart/<item_id>', methods=['PUT'])
 def update_quantity(item_id):
     quantity = request.json.get('quantity')
     mongo.db.carts.update_one({"_id": ObjectId(item_id)}, {"$set": {"quantity": quantity}})
     return jsonify({"message": "Quantity updated"})
 
+# Δημιουργία endpoint για την διαγραφή ενός προϊόντος από το καλάθι
 @app.route('/cart/<item_id>', methods=['DELETE'])
 def delete_cart_item(item_id):
     mongo.db.carts.delete_one({"_id": ObjectId(item_id)})
     return jsonify({"message": "Item removed from cart"})
 
+# Δημιουργία endpoint για την ολοκλήρωση της αγοράς
 @app.route('/cart/checkout/<user_id>', methods=['POST'])
 def checkout(user_id):
     cart_items = list(mongo.db.carts.find({"user_id": user_id}))
@@ -158,7 +161,7 @@ def checkout(user_id):
         ],
         "timestamp": datetime.now()
     })
-
+    # Διαγραφή των προϊόντων από το καλάθι μετά την ολοκλήρωση της αγοράς
     mongo.db.carts.delete_many({"user_id": user_id})
     return jsonify({"message": "Purchase complete"}), 200
 
@@ -166,3 +169,5 @@ def checkout(user_id):
 
 if __name__ == '__main__':
     app.run(debug=True, host='0.0.0.0')
+#    # Η εφαρμογή θα τρέξει σε όλες τις διευθύνσεις IP του host
+#    # και θα είναι διαθέσιμη στο port 5000
