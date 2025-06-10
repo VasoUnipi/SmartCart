@@ -145,9 +145,9 @@ with col5:
 with col6:
     if st.button("🔍 Αναζήτηση"):
         order_param = None
-        if order_by == "Τιμή αύξουσα":
+        if order_by == "Τιμή ↑":
             order_param = "price_asc"
-        elif order_by == "Τιμή φθίνουσα":
+        elif order_by == "Τιμή ↓":
             order_param = "price_desc"
         elif order_by == "Όνομα A-Ω":
             order_param = "name_asc"
@@ -290,10 +290,10 @@ if st.sidebar.button("Ολοκλήρωση Αγοράς"):
 with st.expander("Τιμή από άλλες πηγές (scraping)", expanded=False):
     scrap_term = st.text_input("Προϊόν για τιμή από τρίτο site", key="scraping")
 
-    if st.button("Έλεγχος τιμής από άλλο κατάστημα"):
+    if st.button("🔎 Έλεγχος τιμής από άλλο κατάστημα"):
         if scrap_term.strip():
             try:
-                # Κλήση στο backend endpoint 
+                # Κλήση στο backend endpoint σου
                 r = requests.get(f"{API_BASE}/api/mymarket-scrape", params={"product_name": scrap_term})
                 if r.status_code == 200:
                     result = r.json()
