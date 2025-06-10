@@ -39,12 +39,22 @@ GROQ_API_KEY=your_api_key_here
 ## Δομή Έργου
 
 SMARTCART/
-├── backend/
-│   ├── app.py
-│   ├── products_seed.py
-│   ├── scraping.py
+├── ai/
+│   ├── ai.py
 │   ├── requirements.txt
 │   ├── Dockerfile
+├── analysis/
+│   ├── Dockerfile
+│   ├── requirements.txt
+│   ├── streamlit_analysis.py
+├── backend/
+│   ├── ai.py
+│   ├── app.py
+│   ├── Dockerfile
+│   ├── products_seed.py
+│   ├── requirements.txt
+│   ├── scraping.py
+│   ├── streamlit_analysis.py
 ├── frontend/
 │   ├── streamlit_app.py
 │   ├── requirements.txt
@@ -52,13 +62,10 @@ SMARTCART/
 │   ├── logos/
 │   │   ├── SmartCart.png
 │   │   └── 2.png
-├── ai.py
-├── ai.Dockerfile
 ├── docker-compose.yml
-├── streamlit_analysis.py
-├── streamlit_analysis.Dockerfile
 ├── .env              # API key για Groq (δεν περιλαμβάνεται)
 ├── README.md
+├── Smartcart REST API.postman_collection.json
 
 
 ## REST API Endpoints

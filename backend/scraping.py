@@ -6,7 +6,7 @@ from flask import Blueprint, request, jsonify
 
 scraping_bp = Blueprint('scraping', __name__)
 
-@scraping_bp.route('/api/mymarket-scrape', methods=['GET'])
+@scraping_bp.route('/api/mymarket-scrape', methods=['GET']) #Endpoint που ενεργοποιείται από το frontend για scraping
 def mymarket_scrape():
     product_name = request.args.get('product_name')
     if not product_name:
@@ -68,7 +68,7 @@ def scrape_mymarket_product(product_name):
     headers = {
         "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)"
     }
-
+    #GET request στο My Market και αναλύει την HTML με BeautifulSoup
     res = requests.get(product_url, headers=headers)
     if res.status_code != 200:
         return {"error": "Product page not found", "url": product_url}
@@ -83,7 +83,7 @@ def scrape_mymarket_product(product_name):
         h1 = soup.find("h1", class_="text-2xl")
         name = h1.text.strip() if h1 else product_name
 
-    # Τιμή προϊόντος - ψάχνουμε το span με την κλάση που βγάζει την τελική τιμή
+    # Τιμή προϊόντος - Εντοπίζεται το στοιχείο της τελικής τιμής με βάση το class name στο HTML
     price_span = soup.find("span", class_="product-full--final-price")
     price = price_span.text.strip() if price_span else "N/A"
 

@@ -1,6 +1,10 @@
+#Αρχιτεκτονική backend για το SmartCart app
+#Αυτό το αρχείο περιέχει τον κύριο κώδικα της εφαρμογής Flask που διαχειρίζεται τα αιτήματα και τις λειτουργίες του SmartCart app.
+#Εισαγωγή των απαραίτητων βιβλιοθηκών και ρυθμίσεων για την εφαρμογή Flask
+#Εισαγωγή του blueprint για το scraping
 from flask import Flask, request, jsonify
 from flask_pymongo import PyMongo
-from bson.objectid import ObjectId
+from bson.objectid import ObjectId #Το ObjectId χρειάζεται για αλληλεπίδραση με MongoDB
 from datetime import datetime
 from pymongo import ASCENDING, DESCENDING
 from scraping import scraping_bp
@@ -9,27 +13,29 @@ import openai
 
 app = Flask(__name__)
 app.register_blueprint(scraping_bp)
-
+#Καθορισμός της σύνδεσης με τη βάση δεδομένων MongoDB
+# Χρησιμοποιείται το PyMongo για να συνδεθούμε με τη βάση δεδομένων MongoDB
 app.config['MONGO_URI'] = 'mongodb://mongo:27017/smartcart'
 mongo = PyMongo(app)
 
+# Ρύθμιση του OpenAI API για χρήση με Groq
 openai.api_key = os.getenv("GROQ_API_KEY")
 openai.api_base = "https://api.groq.com/openai/v1"  # Groq-compatible
-
 
 #------HOMEPAGE------
 # Route: Home page
 @app.route('/')
 def home():
     return "🚀 Το SmartCart app τρέχει σωστά!"
-
+#Δημιουργία endpoint για την προβολή όλων των προϊόντων
 @app.route('/products', methods=['GET'])
+#Ανάκτηση φίλτρων αναζήτησης από το URL
 def get_products():
     name = request.args.get('name')
     category = request.args.get('category')
     max_price = request.args.get('price')
     order_by = request.args.get('order_by')  # <-- add this
-
+#Δημιουργία ερωτήματος για αναζήτηση προϊόντων ανεξαρτήτως πεζών και κεφαλαίων
     query = {}
     if name:
         query['name'] = {'$regex': name, '$options': 'i'}
@@ -53,14 +59,16 @@ def get_products():
         sort = [("name", DESCENDING)]
 
     if sort:
+    #Εκτέλεση αναζήτησης στη βάση δεδομένων MongoDB με ταξινόμηση
         products = list(mongo.db.products.find(query).sort(sort))
     else:
+    #Εκτέλεση αναζήτησης στη βάση δεδομένων MongoDB
         products = list(mongo.db.products.find(query))
 
     for p in products:
         p['_id'] = str(p['_id'])
     return jsonify(products)
-
+#Δημιουργία endpoint για την προσθήκη ενός συγκεκριμένου προϊόντος στη βάση δεδομένων
 @app.route('/products', methods=['POST'])
 def create_products():
     data = request.json
@@ -69,10 +77,10 @@ def create_products():
         ids = [str(id) for id in result.inserted_ids]
         return jsonify({'message': f'{len(ids)} products created', 'ids': ids}), 201
     else:  # single product
-        result = mongo.db.products.insert_one(data)
-        return jsonify({'message': 'Product created', 'id': str(result.inserted_id)}), 201
+        result = mongo.db.products.insert_one(data) #προσθήκη ενός προϊόντος στη βάση δεδομένων
+        return jsonify({'message': 'Product created', 'id': str(result.inserted_id)}), 201 #επιστροφή μηνύματος επιτυχίας με το ID του προϊόντος
 
-
+#Δημιουργία endpoint για την προσθήκη ενός συγκεκριμένου προϊόντος 
 @app.route('/cart', methods=['POST'])
 def add_to_cart():
     data = request.json

@@ -6,9 +6,9 @@ from groq import Groq
 from dotenv import load_dotenv
 
 
+load_dotenv()
 groq_api_key = os.getenv("GROQ_API_KEY")
 client = Groq(api_key=groq_api_key)
-load_dotenv()
 API_BASE = "http://backend:5000"
 
 st.set_page_config(page_title="SmartCart", page_icon="🛒", layout="wide")
@@ -36,17 +36,11 @@ if st.session_state.checkout_complete:
     st.markdown("""
         <div style='text-align: center;'>
             <h2>Η αγορά ολοκληρώθηκε επιτυχώς!</h2>
-            <img src='https://cdn-icons-png.flaticon.com/512/845/845646.png' width='120'>
-            <p style='font-size: 20px;'>Ευχαριστούμε για την προτίμησή σας! 🛍️</p>
+            <p style='font-size: 20px;'>Ευχαριστούμε για την προτίμησή σας!</p>
         </div>
     """, unsafe_allow_html=True)
     st.stop()
 
-# ------------------ IMAGE ------------------
-image_path = os.path.join(os.path.dirname(__file__), "logos", "2.png")
-img = Image.open(image_path)
-st.image(img, width=120)
-st.markdown("<br><br>", unsafe_allow_html=True)
 
 # ------------------ BACKEND CALLS ------------------
 def get_categories():
@@ -118,13 +112,28 @@ user_input = st.sidebar.text_input("Παρακαλώ εισάγετε όνομα
 if user_input:
     st.session_state.user_id = user_input
 if not st.session_state.user_id:
-    st.warning("Παρακαλώ εισάγετε το User ID σας για να συνεχίσετε.")
+    st.markdown(
+        f"""
+        <style>
+        .stApp {{
+            background-image: url('image.png');
+            background-size: cover;
+            background-repeat: no-repeat;
+            background-position: center;
+        }}
+        </style>
+        """,
+        unsafe_allow_html=True
+    )
+    st.warning("Παρακαλώ εισάγετε το Όνομα Χρήστη σας για να συνεχίσετε.")
     st.stop()
-
+    
 # ------------------ SEARCH BAR ------------------
 col1, col2, col3, col4, col5, col6 = st.columns([2, 3, 2, 2, 2, 1])
 with col1:
-    st.markdown("<h3 style='color:#2c3e50;'>🛒 SmartCart</h3>", unsafe_allow_html=True)
+    image_path_top = os.path.join(os.path.dirname(__file__), "SmartCart.png")
+    img_top = Image.open(image_path_top)
+    st.image(img_top, width=100)
 with col2:
     st.session_state.search_term = st.text_input("Αναζήτηση προϊόντος", value=st.session_state.search_term)
 with col3:
@@ -132,7 +141,7 @@ with col3:
 with col4:
     max_price = st.number_input("Μέγιστη τιμή (€)", min_value=0.0, value=0.0, step=0.5)
 with col5:
-    order_by = st.selectbox("Ταξινόμηση κατά", ["-", "Τιμή ↑", "Τιμή ↓", "Όνομα A-Z", "Όνομα Z-A"])
+    order_by = st.selectbox("Ταξινόμηση κατά", ["-", "Τιμή ↑", "Τιμή ↓", "Όνομα A-Ω", "Όνομα Ω-A"])
 with col6:
     if st.button("🔍 Αναζήτηση"):
         order_param = None
@@ -140,9 +149,9 @@ with col6:
             order_param = "price_asc"
         elif order_by == "Τιμή ↓":
             order_param = "price_desc"
-        elif order_by == "Όνομα A-Z":
+        elif order_by == "Όνομα A-Ω":
             order_param = "name_asc"
-        elif order_by == "Όνομα Z-A":
+        elif order_by == "Όνομα Ω-A":
             order_param = "name_desc"
 
         results = search_products(
@@ -153,10 +162,9 @@ with col6:
         )
         st.session_state.results = results
         st.session_state.show_results = True
-
 # ------------------ RESULTS ------------------
 if not st.session_state.show_results:
-    st.markdown("### Καλωσήρθατε στο **SmartCart** 🛍️")
+    st.markdown("### Καλωσήρθατε στο **SmartCart** ")
     st.markdown("Αναζητήστε προϊόντα, προσθέστε τα στο καλάθι και λάβετε AI προτάσεις και συνταγές.")
 
 if st.session_state.show_results:
@@ -179,7 +187,7 @@ if st.session_state.show_results:
 
 # ------------------ CART SIDEBAR ------------------
 st.sidebar.markdown("---")
-st.sidebar.subheader("🧺 Το Καλάθι Μου")
+st.sidebar.subheader(" Το Καλάθι Μου")
 cart_items = get_cart(st.session_state.user_id)
 total_products, total_price = 0, 0.0
 
@@ -197,7 +205,7 @@ for item in cart_items:
     if new_qty != quantity:
         if update_quantity(item["_id"], new_qty):
             st.experimental_rerun()
-    if st.sidebar.button("❌ Αφαίρεση", key=f"remove_{item['_id']}"):
+    if st.sidebar.button("Αφαίρεση", key=f"remove_{item['_id']}"):
         if delete_cart_item(item["_id"]):
             st.experimental_rerun()
 
@@ -208,49 +216,64 @@ for item in cart_items:
     total_price += item_total
 
 # ------------------ AI SUGGESTIONS ------------------
-# 🔮 AI Suggestion Button Before Checkout (Groq direct call)
 if cart_items:
-    if st.sidebar.button("🤖 Λήψη AI Προτάσεων πριν την αγορά"):
-        with st.sidebar:
-            st.info("✍️ Η τεχνητή νοημοσύνη επεξεργάζεται το καλάθι σας...")
+    with st.sidebar:
+        st.markdown("### Επιλέξτε τι θέλετε να ρωτήσετε τον SmartieBot:")
 
-        # Prepare the cart summary
-        products_str = "\n".join([
-            f"- {item['name']} ({item['quantity']}x): {item.get('description', '')}"
-            for item in cart_items
-        ])
+        ai_choice = st.radio(
+            "Θέμα ερώτησης",
+            [
+                "Ανάλυση διατροφικής αξίας",
+                "Κατάλληλα για vegans ή vegetarians",
+                "Παρόμοια / συμπληρωματικά προϊόντα",
+                "Ιδέες για συνταγές"
+            ],
+            index=0
+        )
 
-        prompt = f"""
+        if st.button("Ρώτησε τον SmartieBot!"):
+            st.info("Ο SmartieBot επεξεργάζεται το καλάθι σας...")
+
+            # Prepare cart summary
+            products_str = "\n".join([
+                f"- {item['name']} ({item['quantity']}x): {item.get('description', '')}"
+                for item in cart_items
+            ])
+
+            # Build prompt based on choice
+            prompt_map = {
+                "Ανάλυση διατροφικής αξίας": "Ανάλυση της διατροφικής αξίας των παρακάτω προϊόντων.",
+                "Κατάλληλα για vegans ή vegetarians": "Ποια από τα παρακάτω προϊόντα είναι κατάλληλα για vegans ή vegetarians;",
+                "Παρόμοια / συμπληρωματικά προϊόντα": "Πρότεινε παρόμοια ή συμπληρωματικά προϊόντα για όσα έχω στο καλάθι.",
+                "Ιδέες για συνταγές": "Πρότεινε ιδέες για συνταγές που μπορώ να φτιάξω με τα παρακάτω προϊόντα."
+            }
+
+            prompt = f"""
 Έχω τα εξής προϊόντα στο καλάθι μου:
 
 {products_str}
 
-Θα ήθελα:
-1. Ανάλυση της διατροφικής αξίας.
-2. Ποια είναι κατάλληλα για vegans ή vegetarians.
-3. Προτάσεις για παρόμοια ή συμπληρωματικά προϊόντα.
-4. Ιδέες για συνταγές που μπορώ να φτιάξω με αυτά.
+{prompt_map[ai_choice]}
 
-Απάντησε στα ελληνικά, οργανωμένα σε ενότητες.
+Απάντησε στα ελληνικά, με σαφήνεια και χωριστές ενότητες αν χρειάζεται.
 """
 
-        try:
-            chat_completion = client.chat.completions.create(
-                model="meta-llama/llama-4-scout-17b-16e-instruct",
-                messages=[
-                    {"role": "system", "content": "Είσαι διατροφολόγος και βοηθός αγορών."},
-                    {"role": "user", "content": prompt}
-                ],
-                temperature=0.7
-            )
+            try:
+                chat_completion = client.chat.completions.create(
+                    model="meta-llama/llama-4-scout-17b-16e-instruct",
+                    messages=[
+                        {"role": "system", "content": "Είσαι διατροφολόγος"},
+                        {"role": "user", "content": prompt}
+                    ],
+                    temperature=0.7
+                )
 
-            response = chat_completion.choices[0].message.content
-            st.sidebar.markdown("### 🤖 AI Προτάσεις:")
-            st.sidebar.markdown(response)
+                response = chat_completion.choices[0].message.content
+                st.markdown("### Απάντηση από τον SmartieBot:")
+                st.markdown(response)
 
-        except Exception as e:
-            st.sidebar.error(f"⚠️ Σφάλμα απόκρισης από την AI: {e}")
-            
+            except Exception as e:
+                st.error(f"Σφάλμα απόκρισης από AI: {e}")           
 
 # ------------------ CHECKOUT ------------------
 st.sidebar.markdown("---")
@@ -262,3 +285,37 @@ if st.sidebar.button("Ολοκλήρωση Αγοράς"):
         st.experimental_rerun()
     else:
         st.sidebar.error("Το καλάθι είναι άδειο ή απέτυχε η πληρωμή.")
+
+# ------------------ SCRAPING ------------------
+with st.expander("Τιμή από άλλες πηγές (scraping)", expanded=False):
+    scrap_term = st.text_input("Προϊόν για τιμή από τρίτο site", key="scraping")
+
+    if st.button("🔎 Έλεγχος τιμής από άλλο κατάστημα"):
+        if scrap_term.strip():
+            try:
+                # Κλήση στο backend endpoint σου
+                r = requests.get(f"{API_BASE}/api/mymarket-scrape", params={"product_name": scrap_term})
+                if r.status_code == 200:
+                    result = r.json()
+
+                    # Έλεγχος αν επιστράφηκε τιμή
+                    if "name" in result:
+                        st.subheader(f"Αποτέλεσμα για «{result['name']}»")
+                        col1, col2 = st.columns([1, 3])
+                        with col1:
+                            if result["image_url"]:
+                                st.image(result["image_url"], width=100)
+                            else:
+                                st.text("Χωρίς εικόνα")
+                        with col2:
+                            st.markdown(f"**{result['name']}**")
+                            st.markdown(f"Τιμή: `{result['price']}`")
+                            st.markdown(f"[Προβολή στο κατάστημα]({result['product_url']})")
+                    else:
+                        st.info("Δεν βρέθηκε προϊόν.")
+                else:
+                    st.warning("Σφάλμα κατά το scraping.")
+            except Exception as e:
+                st.error(f"Σφάλμα: {e}")
+        else:
+            st.warning("Παρακαλώ εισάγετε ένα προϊόν.")
