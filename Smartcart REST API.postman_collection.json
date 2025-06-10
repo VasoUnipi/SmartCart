@@ -110,35 +110,6 @@
 			"response": []
 		},
 		{
-			"name": "POST/ai/recipe",
-			"request": {
-				"method": "POST",
-				"header": [],
-				"body": {
-					"mode": "raw",
-					"raw": "{\r\n  \"question\": \"Δώσε μου μία συνταγή με τα εξής προϊόντα: γιαούρτι\"\r\n}\r\n",
-					"options": {
-						"raw": {
-							"language": "json"
-						}
-					}
-				},
-				"url": {
-					"raw": "http://localhost:5001/ai/recipe",
-					"protocol": "http",
-					"host": [
-						"localhost"
-					],
-					"port": "5001",
-					"path": [
-						"ai",
-						"recipe"
-					]
-				}
-			},
-			"response": []
-		},
-		{
 			"name": "PUT /cart/<item_id>",
 			"request": {
 				"method": "PUT",
@@ -271,6 +242,36 @@
 			"request": {
 				"method": "GET",
 				"header": []
+			},
+			"response": []
+		},
+		{
+			"name": "New Request",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:5000/cart/ai/Γιάννης",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "5000",
+					"path": [
+						"cart",
+						"ai",
+						"Γιάννης"
+					]
+				}
 			},
 			"response": []
 		}
