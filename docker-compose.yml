@@ -37,6 +37,18 @@ services:
       - smartcart-net
 
 
+  analysis:
+    build:
+      context: ./analysis
+      dockerfile: Dockerfile
+    container_name: smartcart-analytics
+    ports:
+      - "8600:8501"
+    depends_on:
+      - mongo
+    networks:
+      - smartcart-net
+
 volumes:
   mongo_data:
 
